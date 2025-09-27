@@ -17,12 +17,12 @@ program
   .action(listCommits);
 
 program
-  .command('request-review')
+  .command('request-review <range>')
   .alias('rr')
-  .description('Create branch for PR from selected commits')
-  .option('-c, --commits <commits>', 'Comma-separated commit indices (from glu ls)')
-  .option('-b, --branch <branch>', 'Target branch name (defaults to <current>-review)')
+  .description('Create branch for PR from commit range (e.g., "1", "1-3", "2-2")')
+  .option('-b, --branch <branch>', 'Target branch name (defaults to glu/tmp/<range>)')
   .option('--push', 'Push branch to origin after creation')
+  .option('--force', 'Force push if branch already exists')
   .action(requestReview);
 
 program.parse();
