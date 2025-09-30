@@ -1,0 +1,18 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "rootDir": ".",
+    "outDir": "../dist/tests",
+    "types": ["node", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["../src/*"],
+      "@/commands/*": ["../src/commands/*"],
+      "@tests/*": ["./*"]
+    }
+  },
+  "include": ["**/*.ts", "../src/**/*.ts"],
+  "exclude": ["node_modules", "../dist"]
+}

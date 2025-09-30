@@ -1,6 +1,7 @@
 {
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
+    "baseUrl": ".",
     // File Layout
     "rootDir": "./src",
     "outDir": "./dist",
@@ -40,5 +41,11 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-  }
+    "paths": {
+      "@/*": ["src/*"],
+      "@/commands/*": ["src/commands/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["tests/**/*", "dist/**/*", "node_modules/**/*"]
 }
