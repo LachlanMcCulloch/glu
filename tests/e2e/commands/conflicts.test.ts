@@ -53,7 +53,7 @@ describe("glu rr conflict scenarios", () => {
     await setupConflictRepo()
 
     // This should work (first commit doesn't conflict with base)
-    const result1 = await execa("node", [gluPath, "rr", "1"], {
+    const result1 = await execa("node", [gluPath, "rr", "1", "--no-push"], {
       cwd: repo!.path,
       reject: false,
     })
@@ -73,7 +73,7 @@ describe("glu rr conflict scenarios", () => {
     await git.commit("Different modification")
 
     // This should fail due to conflict
-    const result2 = await execa("node", [gluPath, "rr", "2"], {
+    const result2 = await execa("node", [gluPath, "rr", "2", "--no-push"], {
       cwd: repo!.path,
       reject: false,
     })
@@ -98,10 +98,14 @@ describe("glu rr conflict scenarios", () => {
     await git.commit("Conflicting change")
 
     // Try to cherry-pick commits that will conflict
-    const result = await execa("node", [gluPath, "rr", "1-2", "--force"], {
-      cwd: repo!.path,
-      reject: false,
-    })
+    const result = await execa(
+      "node",
+      [gluPath, "rr", "1-2", "--force", "--no-push"],
+      {
+        cwd: repo!.path,
+        reject: false,
+      }
+    )
 
     if (result.exitCode !== 0) {
       expect(result.stderr).toContain("Failed to cherry-pick")
@@ -123,7 +127,7 @@ describe("glu rr conflict scenarios", () => {
     await git.commit("Conflict commit")
 
     // This should fail
-    await execa("node", [gluPath, "rr", "1"], {
+    await execa("node", [gluPath, "rr", "1", "--no-push"], {
       cwd: repo.path,
       reject: false,
     })
@@ -161,7 +165,7 @@ describe("glu rr conflict scenarios", () => {
     })
 
     // This should work fine - no conflicts
-    const result = await execa("node", [gluPath, "rr", "1-2"], {
+    const result = await execa("node", [gluPath, "rr", "1-2", "--no-push"], {
       cwd: repo!.path,
       reject: false,
     })

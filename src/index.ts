@@ -20,14 +20,14 @@ program
   .command("request-review <range>")
   .alias("rr")
   .description(
-    'Create branch for PR from commit range (e.g., "1", "1-3", "2-2")'
+    'Create and push branch for PR from commit range (e.g., "1", "1-3", "2-2")'
   )
   .option(
     "-b, --branch <branch>",
     "Target branch name (defaults to glu/tmp/<range>)"
   )
-  .option("--push", "Push branch to origin after creation")
-  .option("--force", "Force push if branch already exists")
+  .option("--force", "Force overwrite if branch already exists")
+  .option("--no-push", "Create branch locally without pushing to origin")
   .action(requestReview)
 
 program.parse()

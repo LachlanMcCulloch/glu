@@ -119,7 +119,7 @@ describe("CLI argument validation", () => {
       expect(result.stdout).toContain("Usage")
       expect(result.stdout).toContain("range")
       expect(result.stdout).toContain("--branch")
-      expect(result.stdout).toContain("--push")
+      expect(result.stdout).toContain("--no-push")
       expect(result.stdout).toContain("--force")
     })
   })
@@ -160,7 +160,7 @@ describe("CLI argument validation", () => {
 
       const result = await execa(
         "node",
-        [gluPath, "rr", "1", "--branch", "test-branch", "--force"],
+        [gluPath, "rr", "1", "--branch", "test-branch", "--force", "--no-push"],
         {
           cwd: testRepo.path,
           reject: false,
@@ -178,7 +178,7 @@ describe("CLI argument validation", () => {
       for (const name of validNames) {
         const result = await execa(
           "node",
-          [gluPath, "rr", "1", "-b", name, "--force"],
+          [gluPath, "rr", "1", "-b", name, "--force", "--no-push"],
           {
             cwd: testRepo.path,
             reject: false,
@@ -192,13 +192,13 @@ describe("CLI argument validation", () => {
 
     test("handles conflicting flags appropriately", async () => {
       // Create branch first
-      await execa("node", [gluPath, "rr", "1"], {
+      await execa("node", [gluPath, "rr", "1", "--no-push"], {
         cwd: testRepo.path,
         reject: false,
       })
 
       // Try without --force (should fail)
-      const result1 = await execa("node", [gluPath, "rr", "1"], {
+      const result1 = await execa("node", [gluPath, "rr", "1", "--no-push"], {
         cwd: testRepo.path,
         reject: false,
       })
@@ -207,10 +207,14 @@ describe("CLI argument validation", () => {
       expect(result1.stderr).toContain("already exists")
 
       // Try with --force (should succeed)
-      const result2 = await execa("node", [gluPath, "rr", "1", "--force"], {
-        cwd: testRepo.path,
-        reject: false,
-      })
+      const result2 = await execa(
+        "node",
+        [gluPath, "rr", "1", "--force", "--no-push"],
+        {
+          cwd: testRepo.path,
+          reject: false,
+        }
+      )
 
       expect(result2.exitCode).toBe(0)
       expect(result2.stdout).toContain("deleting")
