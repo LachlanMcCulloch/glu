@@ -2,7 +2,6 @@ import { simpleGit } from "simple-git"
 
 interface RequestReviewOptions {
   branch?: string
-  push?: boolean
   force?: boolean
 }
 
@@ -157,27 +156,14 @@ export async function requestReview(
       }
     }
 
-    // Push branch if requested
-    if (options.push) {
-      console.log(`Pushing ${targetBranch} to origin...`)
-      if (options.force) {
-        await git.push("origin", targetBranch, ["--force"])
-        console.log(`✅ Branch ${targetBranch} force pushed to origin`)
-      } else {
-        try {
-          await git.push("origin", targetBranch)
-          console.log(`✅ Branch ${targetBranch} pushed to origin`)
-        } catch (error) {
-          console.error(`Failed to push: ${error}`)
-          console.log(
-            "Use --force to force push if the branch exists on origin"
-          )
-          process.exit(1)
-        }
-      }
-    } else {
-      console.log(`✅ Branch ${targetBranch} created locally`)
-      console.log("To push: git push origin " + targetBranch)
+    // Always push branch and set up tracking
+    console.log(`Pushing ${targetBranch} to origin...`)
+    try {
+      await git.push("origin", targetBranch, ["-u", "--force"])
+      console.log(`✅ Branch ${targetBranch} pushed to origin with tracking`)
+    } catch (error) {
+      console.error(`Failed to push: ${error}`)
+      process.exit(1)
     }
 
     // Switch back to original branch
