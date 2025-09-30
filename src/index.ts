@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 
-import { Command } from "commander";
-import { requestReview } from "./commands/request-review.js";
-import { listCommits } from "./commands/list.js";
+import { Command } from "commander"
+import { requestReview } from "./commands/request-review.js"
+import { listCommits } from "./commands/list.js"
 
-const program = new Command();
+const program = new Command()
 
 program
   .name("glu")
   .description("Git stacked branch management CLI")
-  .version("1.0.0");
+  .version("1.0.0")
 
 program
   .command("ls")
   .description("List commits on current branch ahead of origin")
-  .action(listCommits);
+  .action(listCommits)
 
 program
   .command("request-review <range>")
@@ -28,6 +28,6 @@ program
   )
   .option("--push", "Push branch to origin after creation")
   .option("--force", "Force push if branch already exists")
-  .action(requestReview);
+  .action(requestReview)
 
-program.parse();
+program.parse()
