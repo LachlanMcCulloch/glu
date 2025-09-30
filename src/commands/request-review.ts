@@ -3,6 +3,7 @@ import { simpleGit } from "simple-git"
 interface RequestReviewOptions {
   branch?: string
   force?: boolean
+  push?: boolean
 }
 
 export async function requestReview(
@@ -156,14 +157,19 @@ export async function requestReview(
       }
     }
 
-    // Always push branch and set up tracking
-    console.log(`Pushing ${targetBranch} to origin...`)
-    try {
-      await git.push("origin", targetBranch, ["-u", "--force"])
-      console.log(`✅ Branch ${targetBranch} pushed to origin with tracking`)
-    } catch (error) {
-      console.error(`Failed to push: ${error}`)
-      process.exit(1)
+    // Push branch and set up tracking (unless --no-push is specified)
+    if (options.push !== false) {
+      console.log(`Pushing ${targetBranch} to origin...`)
+      try {
+        await git.push("origin", targetBranch, ["-u", "--force"])
+        console.log(`✅ Branch ${targetBranch} pushed to origin with tracking`)
+      } catch (error) {
+        console.error(`Failed to push: ${error}`)
+        process.exit(1)
+      }
+    } else {
+      console.log(`✅ Branch ${targetBranch} created locally`)
+      console.log(`To push: git push -u origin ${targetBranch}`)
     }
 
     // Switch back to original branch

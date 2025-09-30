@@ -27,6 +27,7 @@ program
     "Target branch name (defaults to glu/tmp/<range>)"
   )
   .option("--force", "Force overwrite if branch already exists")
+  .option("--no-push", "Create branch locally without pushing to origin")
   .action(requestReview)
 
 program.parse()
