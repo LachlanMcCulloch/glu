@@ -53,16 +53,14 @@ export async function listCommits() {
 
     const log = await git.log(logOptions)
 
-    // Get commits behind (on origin but not on current branch)
-    const behindLogOptions = {
-      from: "HEAD",
-      to: originBranch,
-      format: { hash: "%H" },
-    }
-    const behindLog = await git.log(behindLogOptions)
-
+    // Get ahead/behind counts using git rev-list --count for accuracy
     const aheadCount = log.all.length
-    const behindCount = behindLog.all.length
+    const behindCountResult = await git.raw([
+      "rev-list",
+      "--count",
+      `HEAD..${originBranch}`,
+    ])
+    const behindCount = parseInt(behindCountResult.trim())
 
     // Format the header with arrow and unicode symbols
     const arrow = chalk.gray("→")

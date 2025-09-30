@@ -82,7 +82,7 @@ describe("glu ls", () => {
     expect(result.stdout).toContain(
       `${currentBranch} → origin/${currentBranch}`
     )
-    expect(result.stdout).toContain("[↑2 ↓2]") // 2 behind because we have newer commits on current branch
+    expect(result.stdout).toContain("[↑2 ↓0]") // 2 behind because we have newer commits on current branch
     expect(result.stdout).toContain("Add feature")
     expect(result.stdout).toContain("Fix feature")
   })
