@@ -161,8 +161,35 @@ export async function requestReview(
     if (options.push !== false) {
       console.log(`Pushing ${targetBranch} to origin...`)
       try {
-        await git.push("origin", targetBranch, ["-u", "--force"])
+        // Use git.raw to capture full push output including remote messages
+        const pushOutput = await git.raw([
+          "push",
+          "-u",
+          "--force",
+          "origin",
+          targetBranch,
+        ])
         console.log(`✅ Branch ${targetBranch} pushed to origin with tracking`)
+
+        // Show remote messages (often contains PR creation URLs)
+        if (pushOutput && pushOutput.trim()) {
+          const lines = pushOutput.trim().split("\n")
+          const remoteMessages = lines.filter(
+            (line) =>
+              line.includes("pull request") ||
+              line.includes("merge request") ||
+              line.includes("http") ||
+              line.includes("https") ||
+              line.includes("remote:")
+          )
+
+          if (remoteMessages.length > 0) {
+            console.log("")
+            remoteMessages.forEach((msg) => {
+              console.log(msg.replace(/^remote:\s*/, ""))
+            })
+          }
+        }
       } catch (error) {
         console.error(`Failed to push: ${error}`)
         process.exit(1)
