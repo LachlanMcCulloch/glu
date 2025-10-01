@@ -51,7 +51,18 @@ export async function listCommits() {
       },
     }
 
-    const log = await git.log(logOptions)
+    const log = await git.log({
+      from: originBranch,
+      to: "HEAD",
+      symmetric: false,
+      format: {
+        hash: "%H",
+        abbreviated_hash: "%h",
+        subject: "%s",
+        author_name: "%an",
+        author_date: "%ad",
+      },
+    })
 
     // Get ahead/behind counts using git rev-list --count for accuracy
     const aheadCount = log.all.length
