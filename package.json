@@ -14,7 +14,9 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "preglu": "npm run --silent build",
+    "glu": "node ./dist/index.js"
   },
   "keywords": [],
   "author": "",
