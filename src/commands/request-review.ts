@@ -1,4 +1,5 @@
 import { simpleGit } from "simple-git"
+import { loadConfig } from "../config/index.js"
 import { execa } from "execa"
 
 interface RequestReviewOptions {
@@ -117,6 +118,9 @@ export async function requestReview(
     // Select commits in range
     const selectedCommits = allCommits.slice(startIndex, endIndex + 1)
 
+    // Load configuration for branch naming
+    const config = loadConfig()
+
     // Determine target branch name from commit messages or user option
     let targetBranch: string
     if (options.branch) {
@@ -125,19 +129,25 @@ export async function requestReview(
       // Single commit: use full commit message
       const firstCommit = selectedCommits[0]
       const branchFromCommit = firstCommit?.subject
-        ? formatCommitMessageToBranchName(firstCommit.subject)
+        ? formatCommitMessageToBranchName(firstCommit.subject, config)
         : ""
-      targetBranch = branchFromCommit || `glu/tmp/${range}`
+      const baseBranchName = branchFromCommit || `glu/tmp/${range}`
+      targetBranch = config.branchPrefix
+        ? `${config.branchPrefix}${baseBranchName}`
+        : baseBranchName
     } else {
       // Multiple commits: use first commit + indicator
       const firstCommit = selectedCommits[0]
       const branchFromCommit = firstCommit?.subject
-        ? formatCommitMessageToBranchName(firstCommit.subject)
+        ? formatCommitMessageToBranchName(firstCommit.subject, config)
         : ""
       const additionalCount = selectedCommits.length - 1
-      targetBranch = branchFromCommit
+      const baseBranchName = branchFromCommit
         ? `${branchFromCommit}-plus-${additionalCount}-more`
         : `glu/tmp/${range}`
+      targetBranch = config.branchPrefix
+        ? `${config.branchPrefix}${baseBranchName}`
+        : baseBranchName
     }
 
     console.log(`Creating branch ${targetBranch} from ${originBranch}...`)
@@ -233,13 +243,24 @@ export async function requestReview(
   }
 }
 
-function formatCommitMessageToBranchName(message: string): string {
-  return message
-    .toLowerCase()
-    .replace(/^(feat|fix|docs|style|refactor|test|chore)(\(.*\))?:\s*/i, "") // Remove conventional commit prefixes
+function formatCommitMessageToBranchName(message: string, config: any): string {
+  let formatted = message.toLowerCase()
+
+  // Remove conventional commit prefixes from config
+  if (config.conventionalCommits?.stripPrefixes) {
+    for (const prefix of config.conventionalCommits.stripPrefixes) {
+      const regex = new RegExp(
+        `^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*`,
+        "i"
+      )
+      formatted = formatted.replace(regex, "")
+    }
+  }
+
+  return formatted
     .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
-    .replace(/\s+/g, "-") // Replace spaces with hyphens
-    .replace(/-+/g, "-") // Replace multiple hyphens with single
-    .replace(/^-|-$/g, "") // Remove leading/trailing hyphens
-    .slice(0, 50) // Limit length
+    .replace(/\s+/g, config.formatting?.separator || "-") // Replace spaces with separator
+    .replace(/-+/g, config.formatting?.separator || "-") // Replace multiple separators with single
+    .replace(/^-|-$/g, "") // Remove leading/trailing separators
+    .slice(0, config.formatting?.maxBranchLength || 50) // Limit length
 }

@@ -17,6 +17,14 @@ To install globally:
 npm install -g .
 ```
 
+## Commands
+
+```bash
+glu ls                    # List commits ahead of origin
+glu rr <range>           # Create branch for PR from commit range
+glu config <command>     # Manage configuration settings
+```
+
 ## Usage
 
 ### List Commits
@@ -46,21 +54,26 @@ Range formats:
 
 Options:
 
-- `-b, --branch <branch>`: Target branch name (defaults to `glu/tmp/<range>`)
-- `--push`: Push branch to origin after creation
-- `--force`: Force push if branch already exists
+- `-b, --branch <branch>`: Target branch name (defaults to commit message-based name with configured prefix)
+- `--no-push`: Create branch locally without pushing to origin
+- `--force`: Force overwrite if branch already exists
+
+**Note:** Branch names are automatically generated from commit messages and can be customized with configuration. See [Configuration](docs/configuration.md) for details.
 
 Examples:
 
 ```bash
-# Create branch with single commit
-glu rr 1 --push
+# Create and push branch (default behavior)
+glu rr 1
 
 # Create branch with commit range
-glu rr 1-3 --push --force
+glu rr 1-3 --force
 
 # Create branch locally only
-glu rr 2-2 -b "my-feature"
+glu rr 2 --no-push
+
+# Override branch name
+glu rr 1 -b "my-custom-feature"
 ```
 
 ## Workflow
@@ -95,13 +108,39 @@ glu ls
 #   2  def5678  Add logout functionality
 
 # Create PR for single patch
-glu rr 1 --push
+glu rr 1
 
 # Create PR for multiple patches
-glu rr 1-2 --push --force
+glu rr 1-2 --force
 ```
+
+## Configuration
+
+Glu supports flexible configuration for branch naming, formatting, and behavior. You can customize:
+
+- **Branch prefixes** (e.g., `username/feat/branch-name`)
+- **Naming separators** (hyphens vs underscores)
+- **Branch length limits**
+- **Conventional commit prefix handling**
+- **Remote settings**
+
+### Quick Setup
+
+```bash
+# Set your branch prefix
+glu config set branchPrefix "username/feat/"
+
+# View current configuration
+glu config list
+
+# See all options
+glu config --help
+```
+
+For detailed configuration options, see [Configuration Documentation](docs/configuration.md).
 
 ## Development
 
 - Build: `npm run build`
 - Start: `npm start`
+- Test: `npm test`
