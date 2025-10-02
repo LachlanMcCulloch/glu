@@ -64,9 +64,6 @@ export async function requestReview(
       startIndex = endIndex = single - 1 // Convert to 0-based
     }
 
-    // Determine target branch name
-    const targetBranch = options.branch || `glu/tmp/${range}`
-
     // Check if origin exists and has the current branch
     const remotes = await git.getRemotes(true)
     const originRemote = remotes.find((r: any) => r.name === "origin")
@@ -94,7 +91,7 @@ export async function requestReview(
     const logOptions = {
       from: originBranch,
       to: "HEAD",
-      format: { hash: "%H" },
+      format: { hash: "%H", subject: "%s" },
     }
     const log = await git.log(logOptions)
 
@@ -119,6 +116,29 @@ export async function requestReview(
 
     // Select commits in range
     const selectedCommits = allCommits.slice(startIndex, endIndex + 1)
+
+    // Determine target branch name from commit messages or user option
+    let targetBranch: string
+    if (options.branch) {
+      targetBranch = options.branch
+    } else if (selectedCommits.length === 1) {
+      // Single commit: use full commit message
+      const firstCommit = selectedCommits[0]
+      const branchFromCommit = firstCommit?.subject
+        ? formatCommitMessageToBranchName(firstCommit.subject)
+        : ""
+      targetBranch = branchFromCommit || `glu/tmp/${range}`
+    } else {
+      // Multiple commits: use first commit + indicator
+      const firstCommit = selectedCommits[0]
+      const branchFromCommit = firstCommit?.subject
+        ? formatCommitMessageToBranchName(firstCommit.subject)
+        : ""
+      const additionalCount = selectedCommits.length - 1
+      targetBranch = branchFromCommit
+        ? `${branchFromCommit}-plus-${additionalCount}-more`
+        : `glu/tmp/${range}`
+    }
 
     console.log(`Creating branch ${targetBranch} from ${originBranch}...`)
 
@@ -211,4 +231,15 @@ export async function requestReview(
     console.error("Error:", error)
     process.exit(1)
   }
+}
+
+function formatCommitMessageToBranchName(message: string): string {
+  return message
+    .toLowerCase()
+    .replace(/^(feat|fix|docs|style|refactor|test|chore)(\(.*\))?:\s*/i, "") // Remove conventional commit prefixes
+    .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-") // Replace multiple hyphens with single
+    .replace(/^-|-$/g, "") // Remove leading/trailing hyphens
+    .slice(0, 50) // Limit length
 }
