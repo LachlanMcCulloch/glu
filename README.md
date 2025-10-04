@@ -106,8 +106,8 @@ git commit -m "Add logout functionality"
 # See your patch stack
 glu ls
 # main → origin/main [↑2 ↓0]
-#   1  abc1234  Fix validation bug
-#   2  def5678  Add logout functionality
+#   2  abc1234  Fix validation bug
+#   1  def5678  Add logout functionality
 
 # Create PR for single patch
 glu rr 1
