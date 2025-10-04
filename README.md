@@ -1,5 +1,7 @@
 # glu
 
+[![CI](https://github.com/LachlanMcCulloch/glu/actions/workflows/ci.yml/badge.svg)](https://github.com/LachlanMcCulloch/glu/actions/workflows/ci.yml)
+
 Git stacked commit management CLI - inspired by git patch stack.
 
 ## Installation
