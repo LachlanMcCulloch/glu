@@ -90,7 +90,7 @@ export async function listCommits() {
       return
     }
 
-    ;[...log.all].reverse().forEach((commit: any, index: number) => {
+    log.all.forEach((commit: any, index: number) => {
       const shortSha = commit.hash.substring(0, 7)
       const message =
         commit.subject.length > 60
@@ -98,7 +98,7 @@ export async function listCommits() {
           : commit.subject
 
       // Format with consistent spacing - 2 spaces before index, 2 spaces after index
-      const paddedIndex = (index + 1).toString().padStart(2)
+      const paddedIndex = (log.all.length - index).toString().padStart(2)
       console.log(
         `  ${chalk.cyan(paddedIndex)}  ${chalk.yellow(shortSha)}  ${message}`
       )

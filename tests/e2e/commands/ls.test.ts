@@ -82,8 +82,21 @@ describe("glu ls", () => {
     expect(result.stdout).toContain(
       `${currentBranch} → origin/${currentBranch}`
     )
-    expect(result.stdout).toContain("[↑2 ↓0]") // 2 behind because we have newer commits on current branch
-    expect(result.stdout).toContain("Add feature")
-    expect(result.stdout).toContain("Fix feature")
+
+    const log = await git.log()
+    const commits = log.all
+
+    const lines = result.stdout.split("\n").filter(Boolean)
+    expect(lines[0]).toEqual("master → origin/master [↑2 ↓0]")
+
+    // Assess structure of lines
+    expect(lines[1]).toMatch(/^\s+2\s+[a-f0-9]{7}\s+.+$/)
+    expect(lines[2]).toMatch(/^\s+1\s+[a-f0-9]{7}\s+.+$/)
+
+    // Assess line content accurracy
+    expect(lines[1]).toContain(commits[0]?.message) // newest commit
+    expect(lines[1]).toContain(commits[0]?.hash.substring(0, 7))
+    expect(lines[2]).toContain(commits[1]?.message) // older commit
+    expect(lines[2]).toContain(commits[1]?.hash.substring(0, 7))
   })
 })
