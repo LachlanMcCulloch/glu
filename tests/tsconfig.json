@@ -1,12 +1,12 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
+    "rootDir": "..", // Overriden from base to point to project root
+    "baseUrl": ".",
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "rootDir": ".",
     "outDir": "../dist/tests",
     "types": ["node", "vitest/globals"],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["../src/*"],
       "@/commands/*": ["../src/commands/*"],
