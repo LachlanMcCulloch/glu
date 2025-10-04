@@ -1,9 +1,9 @@
 {
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    "baseUrl": ".",
     // File Layout
-    "rootDir": "./src",
+    "rootDir": ".",
+    "baseUrl": ".",
     "outDir": "./dist",
 
     // Environment Settings
@@ -46,6 +46,6 @@
       "@/commands/*": ["src/commands/*"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["tests/**/*", "dist/**/*", "node_modules/**/*"]
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["dist/**/*", "node_modules/**/*"]
 }
