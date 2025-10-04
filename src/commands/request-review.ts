@@ -101,7 +101,19 @@ export async function requestReview(
       return
     }
 
-    const allCommits = [...log.all].reverse() // oldest to newest
+    const allCommits = log.all
+
+    // Convert display indices to array indices (flip order: newest=1)
+    if (range.includes("-")) {
+      startIndex = allCommits.length - 1 - startIndex
+      endIndex = allCommits.length - 1 - endIndex
+      // Swap if needed since we flipped
+      if (startIndex > endIndex) {
+        ;[startIndex, endIndex] = [endIndex, startIndex]
+      }
+    } else {
+      startIndex = endIndex = allCommits.length - 1 - startIndex
+    }
 
     // Validate range
     if (
