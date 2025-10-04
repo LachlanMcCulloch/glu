@@ -90,7 +90,7 @@ export async function listCommits() {
       return
     }
 
-    ;[...log.all].reverse().forEach((commit: any, index: number) => {
+    log.all.forEach((commit: any, index: number) => {
       const shortSha = commit.hash.substring(0, 7)
       const message =
         commit.subject.length > 60

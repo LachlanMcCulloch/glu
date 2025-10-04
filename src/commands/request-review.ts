@@ -101,7 +101,7 @@ export async function requestReview(
       return
     }
 
-    const allCommits = [...log.all].reverse() // oldest to newest
+    const allCommits = log.all
 
     // Validate range
     if (
