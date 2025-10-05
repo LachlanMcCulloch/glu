@@ -12,6 +12,10 @@ export interface GluConfig {
     maxBranchLength?: number
     separator?: string
   }
+  list?: {
+    showBranches?: boolean
+    maxBranchesDisplayed?: number
+  }
 }
 
 export type PartialGluConfig = Partial<GluConfig>

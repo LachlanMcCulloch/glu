@@ -1,6 +1,8 @@
 import { simpleGit } from "simple-git"
 import { loadConfig } from "../config/index.js"
 import { execa } from "execa"
+import { addGluIdToMessage, extractGluId } from "../utils/glu-id.js"
+import { addBranchToTracking } from "../utils/branch-tracking.js"
 
 interface RequestReviewOptions {
   branch?: string
@@ -92,7 +94,7 @@ export async function requestReview(
     const logOptions = {
       from: originBranch,
       to: "HEAD",
-      format: { hash: "%H", subject: "%s" },
+      format: { hash: "%H", subject: "%s", body: "%B" },
     }
     const log = await git.log(logOptions)
 
@@ -180,22 +182,55 @@ export async function requestReview(
       // Branch doesn't exist, which is fine
     }
 
+    // Store original branch for cleanup
+    const originalBranch = currentBranch
+
     // Create new branch from origin branch
     await git.checkoutBranch(targetBranch, originBranch)
 
-    // Cherry-pick selected commits
+    // Cherry-pick selected commits and add glu-ids
     console.log(
       `Cherry-picking ${selectedCommits.length} commit(s) from range ${range}...`
     )
     for (const commit of selectedCommits) {
       try {
-        await git.raw(["cherry-pick", commit.hash])
+        // Cherry-pick without committing to modify the message
+        await git.raw(["cherry-pick", "--no-commit", commit.hash])
+
+        // Get the full commit message and check for existing glu-id
+        const fullMessage = commit.body || commit.subject
+        let gluId = extractGluId(fullMessage)
+        let commitMessage = fullMessage
+
+        if (!gluId) {
+          // Add glu-id if it doesn't exist
+          commitMessage = addGluIdToMessage(fullMessage)
+          gluId = extractGluId(commitMessage)
+        }
+
+        // Commit with potentially modified message
+        await git.commit(commitMessage)
+
+        // Track this glu-id with the branch
+        if (gluId) {
+          await addBranchToTracking(gluId, targetBranch)
+        }
+
         console.log(`✓ Cherry-picked ${commit.hash.substring(0, 7)}`)
       } catch (error) {
         console.error(
           `Failed to cherry-pick ${commit.hash.substring(0, 7)}: ${error}`
         )
         console.log("Resolve conflicts and run: git cherry-pick --continue")
+
+        // Clean up: return to original branch
+        try {
+          await git.checkout(originalBranch)
+          await git.deleteLocalBranch(targetBranch, true)
+        } catch (cleanupError) {
+          console.error(`Cleanup failed: ${cleanupError}`)
+        }
+
         process.exit(1)
       }
     }

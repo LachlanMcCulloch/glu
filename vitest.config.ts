@@ -11,7 +11,7 @@ export default defineConfig({
     testTimeout: 30000, // 30 seconds for git operations
     hookTimeout: 30000,
     teardownTimeout: 30000,
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.ts", "src/**/*.test.ts"],
     exclude: ["node_modules", "dist", "test-repo"],
     reporters: ["verbose"],
     coverage: {

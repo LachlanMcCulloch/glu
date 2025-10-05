@@ -29,4 +29,8 @@ export const defaultConfig: GluConfig = {
     maxBranchLength: 50,
     separator: "-",
   },
+  list: {
+    showBranches: true,
+    maxBranchesDisplayed: 5,
+  },
 }
