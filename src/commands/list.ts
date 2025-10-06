@@ -1,79 +1,23 @@
-import { simpleGit } from "simple-git"
 import chalk from "chalk"
+import { GitAdapter } from "../infrastructure/git-adapter.js"
+import { GitCommitRepository } from "../core/commit-repository.js"
+import { BranchStatusService } from "../services/branch-status-service.js"
+import { translateListError } from "./list-errors.js"
 
 export async function listCommits() {
+  const gitAdapter = new GitAdapter()
+  const commitRepository = new GitCommitRepository(gitAdapter)
+  const branchStatusService = new BranchStatusService(commitRepository)
+
   try {
-    const git = simpleGit()
+    const unpushedCommits = await commitRepository.getUnpushedCommits()
+    const branchStatus = await branchStatusService.getCurrentBranchStatus()
 
-    // Get the current branch
-    const currentBranch = await git.revparse(["--abbrev-ref", "HEAD"])
+    const aheadCount = branchStatus.comparison.ahead
+    const behindCount = branchStatus.comparison.behind
+    const currentBranch = branchStatus.localBranch
+    const originBranch = branchStatus.remoteBranch
 
-    if (currentBranch === "HEAD") {
-      console.error(
-        "Currently in detached HEAD state. Please checkout a branch."
-      )
-      process.exit(1)
-    }
-
-    // Check if origin exists and has the current branch
-    const remotes = await git.getRemotes(true)
-    const originRemote = remotes.find((r: any) => r.name === "origin")
-
-    if (!originRemote) {
-      console.error(
-        "No origin remote found. Please add an origin remote first."
-      )
-      process.exit(1)
-    }
-
-    const originBranch = `origin/${currentBranch}`
-
-    // Check if origin branch exists
-    try {
-      await git.revparse(["--verify", originBranch])
-    } catch {
-      console.error(
-        `No origin branch found for ${currentBranch}. Push the branch first or there are no commits to compare.`
-      )
-      process.exit(1)
-    }
-
-    // Get commits that are on current branch but not on origin branch
-    const logOptions = {
-      from: originBranch,
-      to: "HEAD",
-      format: {
-        hash: "%H",
-        abbreviated_hash: "%h",
-        subject: "%s",
-        author_name: "%an",
-        author_date: "%ad",
-      },
-    }
-
-    const log = await git.log({
-      from: originBranch,
-      to: "HEAD",
-      symmetric: false,
-      format: {
-        hash: "%H",
-        abbreviated_hash: "%h",
-        subject: "%s",
-        author_name: "%an",
-        author_date: "%ad",
-      },
-    })
-
-    // Get ahead/behind counts using git rev-list --count for accuracy
-    const aheadCount = log.all.length
-    const behindCountResult = await git.raw([
-      "rev-list",
-      "--count",
-      `HEAD..${originBranch}`,
-    ])
-    const behindCount = parseInt(behindCountResult.trim())
-
-    // Format the header with arrow and unicode symbols
     const arrow = chalk.gray("→")
     const upArrow =
       aheadCount > 0 ? chalk.green(`↑${aheadCount}`) : chalk.gray("↑0")
@@ -90,21 +34,23 @@ export async function listCommits() {
       return
     }
 
-    log.all.forEach((commit: any, index: number) => {
+    unpushedCommits.forEach((commit, index) => {
       const shortSha = commit.hash.substring(0, 7)
       const message =
         commit.subject.length > 60
           ? commit.subject.substring(0, 57) + "..."
           : commit.subject
 
-      // Format with consistent spacing - 2 spaces before index, 2 spaces after index
-      const paddedIndex = (log.all.length - index).toString().padStart(2)
+      const paddedIndex = (unpushedCommits.length - index)
+        .toString()
+        .padStart(2)
       console.log(
         `  ${chalk.cyan(paddedIndex)}  ${chalk.yellow(shortSha)}  ${message}`
       )
     })
   } catch (error) {
-    console.error("Error:", error)
-    process.exit(1)
+    const { message, exitCode } = translateListError(error as Error)
+    console.error(message)
+    process.exit(exitCode)
   }
 }

@@ -88,28 +88,64 @@ export class GitFixture {
 
     await this.initRepo(repoPath)
     const git = simpleGit(repoPath)
-    const commitHashes: string[] = []
-
-    // Switch to specified branch or stay on main
     const targetBranch = scenario.currentBranch || "main"
     await git.checkoutLocalBranch(targetBranch)
 
-    // Create all commits
-    for (const commit of scenario.commits) {
-      const hash = await this.createCommit(repoPath, commit)
+    // Determine divergence point
+    const divergePoint = scenario.divergeAt ?? scenario.originAt
+    const commitHashes: string[] = []
+
+    // Create commits up to divergence point (common history)
+    for (let i = 0; i <= divergePoint && i < scenario.commits.length; i++) {
+      const hash = await this.createCommit(repoPath, scenario.commits[i]!)
       commitHashes.push(hash)
+    }
+
+    // Save the divergence point hash
+    const divergenceHash = commitHashes[divergePoint]!
+
+    // Create local commits (ahead of origin)
+    const localCommitHashes = [...commitHashes]
+    for (let i = divergePoint + 1; i < scenario.commits.length; i++) {
+      const hash = await this.createCommit(repoPath, scenario.commits[i]!)
+      localCommitHashes.push(hash)
     }
 
     // Add origin remote
     await this.addOriginRemote(repoPath)
 
-    // Set origin ref to specified commit
-    if (scenario.originAt >= 0 && scenario.originAt < commitHashes.length) {
+    // Handle origin commits (behind scenario)
+    if (scenario.originCommits && scenario.originCommits.length > 0) {
+      // Checkout to divergence point
+      await git.checkout(divergenceHash)
+      await git.checkoutLocalBranch("temp-origin-branch")
+
+      // Create origin-only commits
+      const originHashes = [...commitHashes.slice(0, divergePoint + 1)]
+      for (const originCommit of scenario.originCommits) {
+        const hash = await this.createCommit(repoPath, originCommit)
+        originHashes.push(hash)
+      }
+
+      // Set origin ref to the latest origin commit
       await this.setOriginRef(
         repoPath,
         targetBranch,
-        commitHashes[scenario.originAt]!
+        originHashes[originHashes.length - 1]!
       )
+
+      // Switch back to target branch
+      await git.checkout(targetBranch)
+      await git.deleteLocalBranch("temp-origin-branch", true)
+    } else {
+      // Simple case: origin points to a specific commit in the linear history
+      if (scenario.originAt >= 0 && scenario.originAt < commitHashes.length) {
+        await this.setOriginRef(
+          repoPath,
+          targetBranch,
+          commitHashes[scenario.originAt]!
+        )
+      }
     }
 
     return { path: repoPath, cleanup }
@@ -162,5 +198,95 @@ export class GitFixture {
     const { path: repoPath, cleanup } = await this.createTempDir()
     await this.initRepo(repoPath)
     return { path: repoPath, cleanup }
+  }
+
+  async createAheadBehindScenario(): Promise<TestRepo> {
+    return this.createScenario({
+      name: "Ahead and Behind",
+      commits: [
+        { message: "Initial commit", files: { "README.md": "# Test\n" } },
+        {
+          message: "Common commit 1",
+          files: { "shared.js": "console.log('shared');\n" },
+        },
+        {
+          message: "Common commit 2",
+          files: { "shared.js": "console.log('shared v2');\n" },
+        },
+        // Local commits (ahead)
+        {
+          message: "Local change 1",
+          files: { "local.js": "console.log('local1');\n" },
+        },
+        {
+          message: "Local change 2",
+          files: { "local.js": "console.log('local2');\n" },
+        },
+      ],
+      divergeAt: 2, // Diverge after "Common commit 2"
+      originAt: 2,
+      originCommits: [
+        // Origin commits (behind)
+        {
+          message: "Origin change 1",
+          files: { "origin.js": "console.log('origin1');\n" },
+        },
+        {
+          message: "Origin change 2",
+          files: { "origin.js": "console.log('origin2');\n" },
+        },
+      ],
+      currentBranch: "feature-branch",
+    })
+  }
+
+  async createBehindOnlyScenario(): Promise<TestRepo> {
+    return this.createScenario({
+      name: "Behind Only",
+      commits: [
+        { message: "Initial commit", files: { "README.md": "# Test\n" } },
+        {
+          message: "Common commit",
+          files: { "shared.js": "console.log('shared');\n" },
+        },
+      ],
+      divergeAt: 1, // No local commits ahead
+      originAt: 1,
+      originCommits: [
+        {
+          message: "Origin change 1",
+          files: { "origin.js": "console.log('origin1');\n" },
+        },
+        {
+          message: "Origin change 2",
+          files: { "origin.js": "console.log('origin2');\n" },
+        },
+      ],
+      currentBranch: "main",
+    })
+  }
+
+  async createAheadOnlyScenario(): Promise<TestRepo> {
+    return this.createScenario({
+      name: "Ahead Only",
+      commits: [
+        { message: "Initial commit", files: { "README.md": "# Test\n" } },
+        {
+          message: "Origin commit",
+          files: { "shared.js": "console.log('shared');\n" },
+        },
+        // These are ahead of origin
+        {
+          message: "Local change 1",
+          files: { "local.js": "console.log('local1');\n" },
+        },
+        {
+          message: "Local change 2",
+          files: { "local.js": "console.log('local2');\n" },
+        },
+      ],
+      originAt: 1, // Origin points to "Origin commit"
+      currentBranch: "feature-branch",
+    })
   }
 }
