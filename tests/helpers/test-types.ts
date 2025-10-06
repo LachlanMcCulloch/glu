@@ -17,6 +17,10 @@ export interface TestScenario {
   commits: CommitData[]
   originAt: number // Index of commit where origin points
   currentBranch?: string
+
+  // NEW: Support for behind commits
+  originCommits?: CommitData[] // Additional commits that exist only on origin
+  divergeAt?: number // Index where local and origin diverge
 }
 
 export interface TestResult {
