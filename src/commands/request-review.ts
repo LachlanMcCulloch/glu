@@ -132,6 +132,46 @@ export async function requestReview(
     // Select commits in range
     const selectedCommits = allCommits.slice(startIndex, endIndex + 1)
 
+    // console.debug(`Adding glu-ids to source commits on ${currentBranch}...`)
+
+    // const baseCommit = selectedCommits[selectedCommits.length - 1]?.hash + "^"
+
+    // const tempSourceBranch = `glu/tmp/${Date.now()}`
+    // await git.checkoutBranch(tempSourceBranch, baseCommit)
+
+    // // Apply glu-ids to each commit on temp branch
+    // const updatedCommits = []
+    // for (const commit of selectedCommits.reverse()) {
+    //   await git.raw(["cherry-pick", "--no-commit", commit.hash])
+
+    //   const fullMessage = commit.body || commit.subject
+    //   const updatedCommitMessage = addGluIdToMessage(fullMessage)
+    //   const gluId = extractGluId(updatedCommitMessage) // TODO: this could be better
+    //   await git.commit(updatedCommitMessage)
+
+    //   const newHash = await git.revparse(["HEAD"])
+    //   updatedCommits.push({
+    //     ...commit,
+    //     hash: newHash,
+    //     body: updatedCommitMessage,
+    //   })
+
+    //   if (gluId) {
+    //     await addBranchToTracking(gluId, currentBranch)
+    //   }
+    // }
+
+    // // Update original branch to point to new commits with glu-ids
+    // await git.checkout(currentBranch)
+    // await git.reset(["--hard", tempSourceBranch])
+
+    // await git.deleteLocalBranch(tempSourceBranch)
+
+    // console.log(
+    //   `✓ Added glu-ids to ${selectedCommits.length} commits on ${currentBranch}`
+    // )
+    // const commitsToCherry = updatedCommits.reverse()
+
     // Load configuration for branch naming
     const config = loadConfig()
 
@@ -188,11 +228,11 @@ export async function requestReview(
     // Create new branch from origin branch
     await git.checkoutBranch(targetBranch, originBranch)
 
-    // Cherry-pick selected commits and add glu-ids
+    // Cherry-pick selected commits using updated glu-ids
     console.log(
       `Cherry-picking ${selectedCommits.length} commit(s) from range ${range}...`
     )
-    for (const commit of selectedCommits) {
+    for (const commit of commitsToCherry) {
       try {
         // Cherry-pick without committing to modify the message
         await git.raw(["cherry-pick", "--no-commit", commit.hash])
