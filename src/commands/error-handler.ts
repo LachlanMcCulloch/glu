@@ -87,6 +87,19 @@ function translateGitError(error: GitError, command?: string): ErrorResult {
         exitCode: 1,
       }
 
+    case GitErrorType.DIRTY_WORKING_DIRECTORY:
+      const message = [
+        "Please commit or stash your changes before requesting a review.",
+        "git add .",
+        'git commit -m "your message"',
+        "or",
+        "git stash",
+      ].join("\n")
+      return {
+        message,
+        exitCode: 1,
+      }
+
     default:
       return {
         message: `Git operation failed: ${error.message}`,

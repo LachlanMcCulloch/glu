@@ -1,5 +1,5 @@
-import { translateError } from "./error-handler.js"
-import { GitError, GitErrorType } from "../core/errors.js"
+import { translateError } from "../error-handler.js"
+import { GitError, GitErrorType } from "../../core/errors.js"
 
 export function translateListError(error: Error): {
   message: string

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { Command } from "commander"
-import { requestReview } from "./commands/request-review.js"
-import { listCommits } from "./commands/list.js"
+import { requestReview } from "./commands/request-review/request-review.js"
+import { listCommits } from "./commands/list/list.js"
 import {
   configGet,
   configSet,

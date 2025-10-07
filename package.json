@@ -16,7 +16,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preglu": "npm run --silent build",
-    "glu": "node ./dist/index.js"
+    "glu": "node ./dist/index.js",
+    "glu-debug": "DEBUG=simple-git node ./dist/index.js"
   },
   "keywords": [],
   "author": "",

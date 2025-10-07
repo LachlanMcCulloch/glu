@@ -17,6 +17,7 @@ export interface CommitRepository {
     branchName: string,
     originBranch: string
   ): Promise<void>
+  verifyRevision(rev: string): Promise<string>
   getNewCommitHash(): Promise<string>
 }
 
@@ -152,7 +153,7 @@ export class GitCommitRepository implements CommitRepository {
   }
 
   async cherryPickWithoutCommit(commit: Commit): Promise<void> {
-    await this.gitAdapter.cherryPick(commit.hash, true)
+    await this.gitAdapter.cherryPick(commit.hash, { noCommit: true })
   }
 
   async commitWithMessage(message: string): Promise<void> {
@@ -164,6 +165,10 @@ export class GitCommitRepository implements CommitRepository {
     originBranch: string
   ): Promise<void> {
     await this.gitAdapter.checkoutBranch(branchName, originBranch)
+  }
+
+  async verifyRevision(rev: string): Promise<string> {
+    return await this.gitAdapter.revparse(["--verify", rev])
   }
 
   async getNewCommitHash(): Promise<string> {
