@@ -16,7 +16,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preglu": "npm run --silent build",
-    "glu": "node ./dist/index.js"
+    "glu": "node ./dist/index.js",
+    "glu-debug": "DEBUG=simple-git node ./dist/index.js"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +29,7 @@
     "chalk": "^5.6.2",
     "commander": "^14.0.1",
     "cosmiconfig": "^9.0.0",
+    "ora": "^9.0.0",
     "simple-git": "^3.28.0",
     "typescript": "^5.9.2"
   },

@@ -1,8 +1,8 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --no-warnings=ExperimentalWarning
 
 import { Command } from "commander"
-import { requestReview } from "./commands/request-review.js"
-import { listCommits } from "./commands/list.js"
+import { RequestReviewCommand } from "./commands/request-review/request-review.js"
+import { ListCommand } from "./commands/list/list.js"
 import {
   configGet,
   configSet,
@@ -23,7 +23,10 @@ program
 program
   .command("ls")
   .description("List commits on current branch ahead of origin")
-  .action(listCommits)
+  .action(async () => {
+    const command = ListCommand.create()
+    await command.execute()
+  })
 
 // MARK: - Request Review
 
@@ -37,9 +40,13 @@ program
     "-b, --branch <branch>",
     "Target branch name (defaults to glu/tmp/<range>)"
   )
-  .option("--force", "Force overwrite if branch already exists")
   .option("--no-push", "Create branch locally without pushing to origin")
-  .action(requestReview)
+  .action(
+    async (range: string, options: { branch?: string; push?: boolean }) => {
+      const command = RequestReviewCommand.create(range, options)
+      await command.execute()
+    }
+  )
 
 // MARK: - Config
 
