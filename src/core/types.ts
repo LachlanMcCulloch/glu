@@ -47,3 +47,8 @@ export interface WorkingDirectoryStatus {
   untracked: string[]
   conflicted: string[]
 }
+
+export interface PushResult {
+  output: string
+  pullRequestUrl?: string
+}

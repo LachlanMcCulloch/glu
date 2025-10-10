@@ -1,5 +1,5 @@
 import { GitError, GitErrorType } from "../core/errors/git-error.js"
-import type { Branch } from "../core/types.js"
+import type { Branch, PushResult } from "../core/types.js"
 import type { GitAdapter } from "../infrastructure/git-adapter.js"
 
 export class BranchService {
@@ -64,10 +64,14 @@ export class BranchService {
     await this.git.deleteLocalBranch(name, true)
   }
 
-  async push(branch: string, remote: string, force?: boolean): Promise<void> {
+  async push(
+    branch: string,
+    remote: string,
+    force?: boolean
+  ): Promise<PushResult> {
     try {
       const options = force ? ["--force"] : []
-      await this.git.push(remote, branch, options)
+      return await this.git.push(remote, branch, options)
     } catch (error: any) {
       if (
         error.message?.includes("non-fast-forward") ||

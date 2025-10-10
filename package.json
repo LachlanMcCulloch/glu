@@ -7,7 +7,7 @@
     "glu": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && chmod +x ./dist/index.js",
     "start": "node dist/index.js",
     "test": "vitest",
     "test:ui": "vitest --ui",

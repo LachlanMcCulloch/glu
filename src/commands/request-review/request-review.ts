@@ -62,6 +62,10 @@ export class RequestReviewCommand extends BaseCommand {
         const shortMsg = commit.body.split("\n")[0]
         console.log(`  ${commit.hash.substring(0, 7)} - ${shortMsg}`)
       })
+
+      if (result.pullRequestUrl) {
+        console.log(`\n🔗 Create pull request: ${result.pullRequestUrl}`)
+      }
     } catch (error) {
       spinner.stop()
       throw error

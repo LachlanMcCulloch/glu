@@ -14,6 +14,7 @@ export enum GitErrorType {
   DIRTY_WORKING_DIRECTORY = "DIRTY_WORKING_DIRECTORY",
   PUSH_REJECTED = "PUSH_REJECTED",
 }
+// TODO: Tighten up these errors and their contexts
 
 export class GitError extends ApplicationError {
   readonly exitCode = 1
@@ -64,33 +65,53 @@ export class GitError extends ApplicationError {
   }
 
   private branchNotFoundMessage(): string {
-    const branch = this.getContext("branchName", "specified branch")
+    const localRef = this.getContext(
+      "localRef",
+      this.getContext("branchName", "specified branch")
+    )
+    const remoteRef = this.getContext("remoteRef", "")
+    const branchName = localRef || remoteRef || "specified branch"
 
     return [
-      `❌ Branch not found: ${branch}`,
+      `❌ Branch not found: ${branchName}`,
       "",
-      `The branch '${branch}' does not exist.`,
+      `The branch '${branchName}' does not exist.`,
       "",
       "To see all branches:",
       "  git branch -a",
       "",
       "To create this branch:",
-      `  git checkout -b ${branch}`,
+      `  git checkout -b ${branchName}`,
     ].join("\n")
   }
 
   private originNotFoundMessage(): string {
-    return [
+    const branch = this.getContext("branch", "")
+    const upstream = this.getContext(
+      "upstreamBranch",
+      this.getContext("originBranch", "")
+    )
+
+    const lines = [
       "❌ No remote 'origin' configured",
       "",
       "No remote repository named 'origin' is configured for this repository.",
-      "",
-      "To add a remote:",
-      "  git remote add origin <repository-url>",
-      "",
-      "To see current remotes:",
-      "  git remote -v",
-    ].join("\n")
+    ]
+
+    if (branch && upstream) {
+      lines.push("")
+      lines.push(`Branch: ${branch}`)
+      lines.push(`Expected upstream: ${upstream}`)
+    }
+
+    lines.push("")
+    lines.push("To add a remote:")
+    lines.push("  git remote add origin <repository-url>")
+    lines.push("")
+    lines.push("To see current remotes:")
+    lines.push("  git remote -v")
+
+    return lines.join("\n")
   }
 
   private detachedHeadMessage(): string {
@@ -185,16 +206,22 @@ export class GitError extends ApplicationError {
   }
 
   private branchComparisonFailedMessage(): string {
-    const branch = this.getContext("branch", "branch")
-    const upstream = this.getContext("upstream", "upstream")
+    const localRef = this.getContext(
+      "localRef",
+      this.getContext("branch", "branch")
+    )
+    const remoteRef = this.getContext(
+      "remoteRef",
+      this.getContext("upstream", "upstream")
+    )
     const originalError = this.getContext("originalError", "Unknown error")
 
     return [
       "❌ Failed to compare branches",
       "",
-      `Could not compare '${branch}' with '${upstream}'.`,
+      `Could not compare '${localRef}' with '${remoteRef}'.`,
       "",
-      originalError,
+      String(originalError),
       "",
       "Please ensure both branches exist and try again.",
     ].join("\n")
@@ -223,7 +250,7 @@ export class GitError extends ApplicationError {
       lines.push(`Command: ${this.context.command}`)
     }
 
-    lines.push(this.getContext("originalError", "Unknown error"))
+    lines.push(String(this.getContext("originalError", "Unknown error")))
     lines.push("")
     lines.push("Please check the error message and try again.")
 
@@ -241,31 +268,31 @@ export class GitError extends ApplicationError {
 
     if (modified.length) {
       lines.push("Modified files:")
-      lines.push(...(modified as string[]).map((f) => `  • ${f}`))
+      lines.push(...modified.map((f) => `  • ${f}`))
       lines.push("")
     }
 
     if (staged.length) {
       lines.push("Staged files:")
-      lines.push(...(staged as string[]).map((f) => `  • ${f}`))
+      lines.push(...staged.map((f) => `  • ${f}`))
       lines.push("")
     }
 
     if (created.length) {
       lines.push("New files:")
-      lines.push(...(created as string[]).map((f) => `  • ${f}`))
+      lines.push(...created.map((f) => `  • ${f}`))
       lines.push("")
     }
 
     if (deleted.length) {
       lines.push("Deleted files:")
-      lines.push(...(deleted as string[]).map((f) => `  • ${f}`))
+      lines.push(...deleted.map((f) => `  • ${f}`))
       lines.push("")
     }
 
     if (untracked.length) {
       lines.push("Untracked files:")
-      lines.push(...(untracked as string[]).map((f) => `  • ${f}`))
+      lines.push(...untracked.map((f) => `  • ${f}`))
       lines.push("")
     }
 
@@ -278,7 +305,7 @@ export class GitError extends ApplicationError {
     return lines.join("\n")
   }
 
-  pushRejectedMessage() {
+  private pushRejectedMessage(): string {
     const branch = this.getContext("branch", "branch")
     const remote = this.getContext("remote", "origin")
     const reason = this.getContext("reason", "non-fast-forward")

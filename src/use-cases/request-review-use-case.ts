@@ -68,10 +68,17 @@ export class RequestReviewUseCase {
       progress?.onCreatingReviewBranch?.(reviewBranch)
       await this.branchService.createBranchFrom(reviewBranch, tempBranch, true)
 
+      let pullRequestUrl: string | undefined
+
       if (options?.push !== false) {
         progress?.onPushingBranch?.(reviewBranch)
         // TODO: Support all kinds of remotes
-        await this.branchService.push(reviewBranch, "origin", true)
+        const pushResult = await this.branchService.push(
+          reviewBranch,
+          "origin",
+          true
+        )
+        pullRequestUrl = pushResult.pullRequestUrl
       }
 
       progress?.onCleaningUp?.()
@@ -81,6 +88,7 @@ export class RequestReviewUseCase {
         success: true,
         branch: reviewBranch,
         commits: commitsToReview,
+        pullRequestUrl,
       }
     } catch (error) {
       await this.cherryPickService.abortCherryPick().catch(() => {})
@@ -98,4 +106,5 @@ export type RequestReviewResult = {
   success: boolean
   branch: string
   commits: Commit[]
+  pullRequestUrl?: string
 }

@@ -1,5 +1,7 @@
-import type { Commit } from "../core/types.js"
+import type { Commit, PushResult } from "../core/types.js"
 import { simpleGit, type SimpleGit, type StatusResult } from "simple-git"
+import { extractPullRequestUrl } from "../utils/git-url-extractor.js"
+import { buildPullRequestUrl } from "../utils/pr-url-builder.js"
 
 export interface GitOperations {
   getCurrentBranch(): Promise<string>
@@ -14,7 +16,7 @@ export interface GitOperations {
   hasConflicts(): Promise<boolean>
   getConflictFiles(): Promise<string[]>
   commit(message: string): Promise<void>
-  push(remote: string, branch: string, options?: string[]): Promise<void>
+  push(remote: string, branch: string, options?: string[]): Promise<PushResult>
   createBranch(name: string): Promise<void>
   createBranchFrom(
     newBranch: string,
@@ -129,8 +131,33 @@ export class GitAdapter implements GitOperations {
     remote: string,
     branch: string,
     options: string[] = []
-  ): Promise<void> {
-    await this.git.push(remote, branch, options)
+  ): Promise<PushResult> {
+    let stderrOutput = ""
+    const gitWithHandler = this.git.outputHandler((command, stdout, stderr) => {
+      stderr.on("data", (chunk) => {
+        stderrOutput += chunk.toString()
+      })
+    })
+    const args = ["push", remote, branch, ...options]
+    await gitWithHandler.raw(args)
+
+    let pullRequestUrl = extractPullRequestUrl(stderrOutput)
+
+    // If not found, build manually
+    if (!pullRequestUrl) {
+      const remotes = await this.git.getRemotes(true)
+      console.log("\nremotes", remotes)
+      console.log("\nour remote", remote)
+      const remoteInfo = remotes.find((r) => r.name === remote)
+      if (remoteInfo?.refs.push) {
+        pullRequestUrl = buildPullRequestUrl(remoteInfo.refs.push, branch)
+      }
+    }
+
+    return {
+      output: stderrOutput,
+      pullRequestUrl: pullRequestUrl || undefined,
+    }
   }
 
   async createBranch(name: string): Promise<void> {
