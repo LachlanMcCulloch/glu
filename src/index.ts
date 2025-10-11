@@ -1,5 +1,15 @@
 #!/usr/bin/env node --no-warnings=ExperimentalWarning
 
+/*
+ * glu - Git stacked commit management
+ * Copyright (C) 2024 Lachlan McCulloch
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ */
+
 import { Command } from "commander"
 import { RequestReviewCommand } from "./commands/request-review/request-review.js"
 import { ListCommand } from "./commands/list/list.js"
