@@ -83,6 +83,20 @@ export class GitFixture {
     await fs.writeFile(path.join(refPath, branch), commitHash + "\n")
   }
 
+  private async setUpstreamTracking(
+    repoPath: string,
+    localBranch: string,
+    remoteBranch: string
+  ): Promise<void> {
+    const git = simpleGit(repoPath)
+
+    await git.addConfig(`branch.${localBranch}.remote`, "origin")
+    await git.addConfig(
+      `branch.${localBranch}.merge`,
+      `refs/heads/${remoteBranch}`
+    )
+  }
+
   async createScenario(scenario: TestScenario): Promise<TestRepo> {
     const { path: repoPath, cleanup } = await this.createTempDir()
 
@@ -147,6 +161,8 @@ export class GitFixture {
         )
       }
     }
+
+    await this.setUpstreamTracking(repoPath, targetBranch, targetBranch)
 
     return { path: repoPath, cleanup }
   }

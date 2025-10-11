@@ -29,9 +29,7 @@ describe("glu ls", () => {
     })
 
     expect(result.exitCode).toBe(1)
-    expect(result.stderr).toContain(
-      "No origin branch found for master. Push the branch first or there are no commits to compare."
-    )
+    expect(result.stderr).toContain("❌ No remote 'origin' configured")
   })
 
   test("shows commits ahead of origin with tracking info", async () => {

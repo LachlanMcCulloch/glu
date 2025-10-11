@@ -85,7 +85,7 @@ describe("CLI argument validation", () => {
         reject: false,
       })
 
-      expect(result.exitCode).toBe(1)
+      expect(result.exitCode).toBe(2)
       expect(result.stderr).toContain("Invalid range format")
     })
 
@@ -95,7 +95,7 @@ describe("CLI argument validation", () => {
         reject: false,
       })
 
-      expect(result.exitCode).toBe(1)
+      expect(result.exitCode).toBe(2)
       expect(result.stderr).toContain("Invalid range format")
     })
 
@@ -105,8 +105,10 @@ describe("CLI argument validation", () => {
         reject: false,
       })
 
-      expect(result.exitCode).toBe(1)
-      expect(result.stderr).toContain("Invalid range 0. Available commits: 1-2")
+      expect(result.exitCode).toBe(2)
+      expect(result.stderr).toContain(
+        "❌ Validation failed: Start index 0 is out of range (1-2)"
+      )
     })
 
     test("shows help for rr command", async () => {
@@ -120,7 +122,6 @@ describe("CLI argument validation", () => {
       expect(result.stdout).toContain("range")
       expect(result.stdout).toContain("--branch")
       expect(result.stdout).toContain("--no-push")
-      expect(result.stdout).toContain("--force")
     })
   })
 
@@ -160,7 +161,7 @@ describe("CLI argument validation", () => {
 
       const result = await execa(
         "node",
-        [gluPath, "rr", "1", "--branch", "test-branch", "--force", "--no-push"],
+        [gluPath, "rr", "1", "--branch", "test-branch", "--no-push"],
         {
           cwd: testRepo.path,
           reject: false,
@@ -168,7 +169,7 @@ describe("CLI argument validation", () => {
       )
 
       expect(result.exitCode).toBe(0)
-      expect(result.stdout).toContain("Creating branch test-branch")
+      expect(result.stdout).toContain("Creating review branch from commits 1")
     })
 
     test("validates custom branch names", async () => {
@@ -178,7 +179,7 @@ describe("CLI argument validation", () => {
       for (const name of validNames) {
         const result = await execa(
           "node",
-          [gluPath, "rr", "1", "-b", name, "--force", "--no-push"],
+          [gluPath, "rr", "1", "-b", name, "--no-push"],
           {
             cwd: testRepo.path,
             reject: false,
@@ -186,7 +187,9 @@ describe("CLI argument validation", () => {
         )
 
         expect(result.exitCode).toBe(0)
-        expect(result.stdout).toContain(`Creating branch ${name}`)
+        expect(result.stdout).toContain(
+          `Creating ${name} branch from commits 1...`
+        )
       }
     })
 

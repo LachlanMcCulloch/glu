@@ -59,7 +59,7 @@ describe("glu rr conflict scenarios", () => {
     })
 
     expect(result1.exitCode).toBe(0)
-    expect(result1.stdout).toContain("✓ Cherry-picked")
+    expect(result1.stdout).toContain("Commits:")
 
     // Now create a scenario that WILL conflict
     // Reset shared.txt to a different state that will conflict
@@ -79,9 +79,9 @@ describe("glu rr conflict scenarios", () => {
     })
 
     expect(result2.exitCode).toBe(1)
-    expect(result2.stderr).toContain("Failed to cherry-pick")
-    expect(result2.stdout).toContain(
-      "Resolve conflicts and run: git cherry-pick --continue"
+    expect(result2.stderr).toContain("❌ Cherry-pick conflict on commit")
+    expect(result2.stderr).toContain(
+      "The cherry-pick has been aborted. Your repository is back to a clean state."
     )
   })
 
@@ -98,14 +98,10 @@ describe("glu rr conflict scenarios", () => {
     await git.commit("Conflicting change")
 
     // Try to cherry-pick commits that will conflict
-    const result = await execa(
-      "node",
-      [gluPath, "rr", "1-2", "--force", "--no-push"],
-      {
-        cwd: repo!.path,
-        reject: false,
-      }
-    )
+    const result = await execa("node", [gluPath, "rr", "1-2", "--no-push"], {
+      cwd: repo!.path,
+      reject: false,
+    })
 
     if (result.exitCode !== 0) {
       expect(result.stderr).toContain("Failed to cherry-pick")
@@ -171,7 +167,8 @@ describe("glu rr conflict scenarios", () => {
     })
 
     expect(result.exitCode).toBe(0)
-    expect(result.stdout).toContain("Cherry-picking 2 commit(s)")
-    expect(result.stdout).toContain("✓ Cherry-picked")
+    expect(result.stdout).toContain("Commits:")
+    expect(result.stdout).toContain("Modify file1")
+    expect(result.stdout).toContain("Modify file2")
   })
 })
