@@ -20,19 +20,3 @@ export class ListCommand extends BaseCommand {
     })
   }
 }
-
-// export async function listCommits() {
-//   const useCase = ListUseCase.default()
-
-//   try {
-//     const result = await useCase.execute()
-//     const formatted = ListCommitResultFormatter.format(result)
-//     formatted.forEach((line) => {
-//       console.log(line)
-//     })
-//   } catch (error) {
-//     const { message, exitCode } = translateListError(error as Error)
-//     console.error(message)
-//     process.exit(exitCode)
-//   }
-// }

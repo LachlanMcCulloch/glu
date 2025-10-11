@@ -253,11 +253,3 @@ export class CommitService {
   // getGluId(commit: Commit): string | null
   // withGluId(commit: Commit, gluId: string): Commit
 }
-
-// class HistoryRewriteService {
-//   constructor(private git: GitAdapter) {}
-
-//   async cherryPick(commits: Commit[], targetBranch: string): Promise<void>
-//   async rebaseWithUpdates(commits: Commit[], updateFn: (c: Commit) => Commit): Promise<Commit[]>
-//   async injectGluIds(commits: Commit[]): Promise<Commit[]>
-// }

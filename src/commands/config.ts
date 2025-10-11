@@ -1,3 +1,4 @@
+// TODO: Modify into service architecture
 import chalk from "chalk"
 import {
   loadConfig,
