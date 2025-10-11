@@ -1,11 +1,28 @@
-import type { Commit } from "@/core/types.js"
-import { simpleGit, type SimpleGit } from "simple-git"
+import type { Commit, PushResult } from "../core/types.js"
+import { simpleGit, type SimpleGit, type StatusResult } from "simple-git"
+import { extractPullRequestUrl } from "../utils/git-url-extractor.js"
+import { buildPullRequestUrl } from "../utils/pr-url-builder.js"
 
 export interface GitOperations {
   getCurrentBranch(): Promise<string>
   getCommitRange(from: string, to: string): Promise<Commit[]>
-  cherryPick(commitHash: string, noCommit?: boolean): Promise<void>
+  branchExists(branch: string): Promise<boolean>
+  cherryPick(commitHash: string, options?: CherryPickOptions): Promise<void>
+  cherryPickRange(
+    from: string,
+    to: string,
+    options?: CherryPickOptions
+  ): Promise<void>
+  hasConflicts(): Promise<boolean>
+  getConflictFiles(): Promise<string[]>
   commit(message: string): Promise<void>
+  push(remote: string, branch: string, options?: string[]): Promise<PushResult>
+  createBranch(name: string): Promise<void>
+  createBranchFrom(
+    newBranch: string,
+    sourceBranch: string,
+    force?: boolean
+  ): Promise<void>
   checkout(branch: string): Promise<void>
   checkoutBranch(newBranch: string, startPoint: string): Promise<void>
   reset(options: string[]): Promise<void>
@@ -13,6 +30,10 @@ export interface GitOperations {
   deleteLocalBranch(branch: string, force?: boolean): Promise<void>
   getRemotes(verbose?: boolean): Promise<any[]>
   raw(command: string[]): Promise<string>
+}
+
+export type CherryPickOptions = {
+  noCommit?: boolean
 }
 
 /**
@@ -24,9 +45,12 @@ export class GitAdapter implements GitOperations {
   constructor() {
     this.git = simpleGit()
   }
-
   async getCurrentBranch(): Promise<string> {
     return await this.git.revparse(["--abbrev-ref", "HEAD"])
+  }
+
+  async getUpstreamBranch(branch: string): Promise<string> {
+    return await this.git.revparse(["--abbrev-ref", `${branch}@{upstream}`])
   }
 
   async getCommitRange(from: string, to: string): Promise<Commit[]> {
@@ -37,23 +61,116 @@ export class GitAdapter implements GitOperations {
       format: { hash: "%H", subject: "%s", body: "%B" },
     })
 
-    return log.all.map((commit) => ({
+    return log.all.map((commit, index) => ({
       hash: commit.hash,
       subject: commit.subject,
       body: commit.body || commit.subject,
     }))
   }
 
-  async cherryPick(commitHash: string, noCommit = false): Promise<void> {
+  async branchExists(branch: string): Promise<boolean> {
+    try {
+      await this.revparse(["--verify", `refs/heads/${branch}`])
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  async getStatus(): Promise<StatusResult> {
+    return await this.git.status()
+  }
+
+  async cherryPick(
+    commitHash: string,
+    options?: CherryPickOptions
+  ): Promise<void> {
     const args = ["cherry-pick"]
-    if (noCommit) args.push("--no-commit")
+    if (options?.noCommit) args.push("--no-commit")
     args.push(commitHash)
 
     await this.git.raw(args)
   }
 
+  async cherryPickRange(
+    from: string,
+    to: string,
+    options?: CherryPickOptions
+  ): Promise<void> {
+    const args = ["cherry-pick"]
+    if (options?.noCommit) args.push("--no-commit")
+    args.push(`${from}..${to}`)
+    await this.git.raw(args)
+  }
+  async hasConflicts(): Promise<boolean> {
+    try {
+      const result = await this.git.diff(["--name-only", "--diff-filter=U"])
+      return result.trim().length > 0
+    } catch {
+      return false
+    }
+  }
+
+  async getConflictFiles(): Promise<string[]> {
+    try {
+      const result = await this.git.diff(["--name-only", "--diff-filter=U"])
+      return result
+        .trim()
+        .split("\n")
+        .filter((f) => f.length > 0)
+    } catch {
+      return []
+    }
+  }
+
   async commit(message: string): Promise<void> {
     await this.git.commit(message)
+  }
+
+  async push(
+    remote: string,
+    branch: string,
+    options: string[] = []
+  ): Promise<PushResult> {
+    let stderrOutput = ""
+    const gitWithHandler = this.git.outputHandler((command, stdout, stderr) => {
+      stderr.on("data", (chunk) => {
+        stderrOutput += chunk.toString()
+      })
+    })
+    const args = ["push", remote, branch, ...options]
+    await gitWithHandler.raw(args)
+
+    let pullRequestUrl = extractPullRequestUrl(stderrOutput)
+
+    // If not found, build manually
+    if (!pullRequestUrl) {
+      const remotes = await this.git.getRemotes(true)
+      const remoteInfo = remotes.find((r) => r.name === remote)
+      if (remoteInfo?.refs.push) {
+        pullRequestUrl = buildPullRequestUrl(remoteInfo.refs.push, branch)
+      }
+    }
+
+    return {
+      output: stderrOutput,
+      pullRequestUrl: pullRequestUrl || undefined,
+    }
+  }
+
+  async createBranch(name: string): Promise<void> {
+    await this.git.checkoutLocalBranch(name)
+  }
+
+  async createBranchFrom(
+    newBranch: string,
+    sourceBranch: string,
+    force = false
+  ): Promise<void> {
+    const args = force
+      ? ["-f", newBranch, sourceBranch]
+      : [newBranch, sourceBranch]
+    await this.git.branch(args)
   }
 
   async checkout(branch: string): Promise<void> {
