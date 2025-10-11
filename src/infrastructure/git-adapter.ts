@@ -146,8 +146,6 @@ export class GitAdapter implements GitOperations {
     // If not found, build manually
     if (!pullRequestUrl) {
       const remotes = await this.git.getRemotes(true)
-      console.log("\nremotes", remotes)
-      console.log("\nour remote", remote)
       const remoteInfo = remotes.find((r) => r.name === remote)
       if (remoteInfo?.refs.push) {
         pullRequestUrl = buildPullRequestUrl(remoteInfo.refs.push, branch)
