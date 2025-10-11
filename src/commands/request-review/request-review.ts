@@ -55,7 +55,16 @@ export class RequestReviewCommand extends BaseCommand {
         }
       )
 
-      spinner.succeed(`${result.branch} created and pushed`)
+      const successMessage =
+        this.options.push === false
+          ? `${result.branch} created locally`
+          : `${result.branch} created and pushed`
+
+      if (spinner.isSpinning) {
+        spinner.succeed(successMessage)
+      } else {
+        console.log(`✓ ${successMessage}`)
+      }
 
       console.log("\nCommits:")
       result.commits.forEach((commit) => {
