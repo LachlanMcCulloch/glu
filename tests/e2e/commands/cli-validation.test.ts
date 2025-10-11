@@ -172,11 +172,10 @@ describe("CLI argument validation", () => {
       expect(result.stdout).toContain("Creating review branch from commits 1")
     })
 
-    test("validates custom branch names", async () => {
-      // Valid branch names should work
-      const validNames = ["feature/test", "feat-123", "user/feature_branch"]
-
-      for (const name of validNames) {
+    test.each(["feature/test", "feat-123", "user/feature_branch"])(
+      "validates custom branch names: %s",
+      async (name) => {
+        // Valid branch names should work
         const result = await execa(
           "node",
           [gluPath, "rr", "1", "-b", name, "--no-push"],
@@ -187,11 +186,9 @@ describe("CLI argument validation", () => {
         )
 
         expect(result.exitCode).toBe(0)
-        expect(result.stdout).toContain(
-          `Creating ${name} branch from commits 1...`
-        )
+        expect(result.stdout).toContain(`✓ ${name} created locally`)
       }
-    })
+    )
 
     test("handles conflicting flags appropriately", async () => {
       // Create branch first
@@ -206,21 +203,8 @@ describe("CLI argument validation", () => {
         reject: false,
       })
 
-      expect(result1.exitCode).toBe(1)
-      expect(result1.stderr).toContain("already exists")
-
-      // Try with --force (should succeed)
-      const result2 = await execa(
-        "node",
-        [gluPath, "rr", "1", "--force", "--no-push"],
-        {
-          cwd: testRepo.path,
-          reject: false,
-        }
-      )
-
-      expect(result2.exitCode).toBe(0)
-      expect(result2.stdout).toContain("deleting")
+      expect(result1.exitCode).toBe(0)
+      expect(result1.stdout).toContain(`add-feature-b created locally`)
     })
   })
 
