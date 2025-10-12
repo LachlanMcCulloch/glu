@@ -1,11 +1,14 @@
 {
-  "name": "glu",
-  "version": "1.0.0",
+  "name": "glu-cli",
+  "version": "0.1.0-alpha.0",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "glu": "dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && chmod +x ./dist/index.js",
     "start": "node dist/index.js",
@@ -19,10 +22,33 @@
     "glu": "node ./dist/index.js",
     "glu-debug": "DEBUG=simple-git node ./dist/index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "git",
+    "cli",
+    "patch-stack",
+    "stacked-commits",
+    "stacked-diffs",
+    "branch-management",
+    "commit-management",
+    "git-workflow",
+    "pull-request",
+    "github",
+    "code-review",
+    "developer-tools",
+    "version-control",
+    "automation"
+  ],
+  "author": "Lachlan McCulloch <lachlan@squarechainlabs.com>",
+  "license": "GPL-3.0-or-later",
   "description": "Git stacked branch management with GitHub integration",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LachlanMcCulloch/glu.git"
+  },
+  "homepage": "https://github.com/LachlanMcCulloch/glu#readme",
+  "bugs": {
+    "url": "https://github.com/LachlanMcCulloch/glu/issues"
+  },
   "dependencies": {
     "@octokit/rest": "^22.0.0",
     "@types/node": "^24.5.2",
