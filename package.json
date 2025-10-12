@@ -1,11 +1,14 @@
 {
   "name": "glu-cli",
-  "version": "1.0.0",
+  "version": "0.1.0-alpha.0",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "glu": "dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && chmod +x ./dist/index.js",
     "start": "node dist/index.js",
