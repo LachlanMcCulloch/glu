@@ -2,6 +2,7 @@ import type { Commit, PushResult } from "../core/types.js"
 import { simpleGit, type SimpleGit, type StatusResult } from "simple-git"
 import { extractPullRequestUrl } from "../utils/git-url-extractor.js"
 import { buildPullRequestUrl } from "../utils/pr-url-builder.js"
+import fs from "fs/promises"
 
 export interface GitOperations {
   getCurrentBranch(): Promise<string>
@@ -42,9 +43,10 @@ export type CherryPickOptions = {
 export class GitAdapter implements GitOperations {
   private git: SimpleGit
 
-  constructor() {
-    this.git = simpleGit()
+  constructor(git?: SimpleGit) {
+    this.git = git ?? simpleGit()
   }
+
   async getCurrentBranch(): Promise<string> {
     return await this.git.revparse(["--abbrev-ref", "HEAD"])
   }

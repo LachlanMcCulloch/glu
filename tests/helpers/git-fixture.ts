@@ -54,9 +54,15 @@ export class GitFixture {
       }
     }
 
+    // Build commit message with optional glu ID
+    let message = commit.message
+    if (commit.gluId) {
+      message = `${commit.message}\n\nGlu-ID: ${commit.gluId}`
+    }
+
     // Stage and commit
     await git.add(".")
-    const result = await git.commit(commit.message, undefined, {
+    const result = await git.commit(message, undefined, {
       "--author": commit.author
         ? `${commit.author.name} <${commit.author.email}>`
         : "Test User <test@example.com>",
@@ -302,6 +308,40 @@ export class GitFixture {
         },
       ],
       originAt: 1, // Origin points to "Origin commit"
+      currentBranch: "feature-branch",
+    })
+  }
+
+  async createStackWithGluIds(options: {
+    withGluIds: boolean[]
+  }): Promise<TestRepo> {
+    const commits: CommitData[] = [
+      {
+        message: "Initial commit",
+        files: { "README.md": "# Test Project\n" },
+        gluId: options.withGluIds[0] ? "glu_test1_abc123" : undefined,
+      },
+      {
+        message: "Add feature A",
+        files: { "feature-a.js": 'export const featureA = () => "A";\n' },
+        gluId: options.withGluIds[1] ? "glu_test2_def456" : undefined,
+      },
+      {
+        message: "Add feature B",
+        files: { "feature-b.js": 'export const featureB = () => "B";\n' },
+        gluId: options.withGluIds[2] ? "glu_test3_ghi789" : undefined,
+      },
+      {
+        message: "Fix feature A",
+        files: { "feature-a.js": 'export const featureA = () => "A_FIXED";\n' },
+        gluId: options.withGluIds[3] ? "glu_test4_jkl012" : undefined,
+      },
+    ]
+
+    return this.createScenario({
+      name: "Stack with Glu IDs",
+      commits,
+      originAt: 0,
       currentBranch: "feature-branch",
     })
   }
