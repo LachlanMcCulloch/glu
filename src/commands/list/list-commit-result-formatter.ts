@@ -39,7 +39,23 @@ export function formatCommits(input: ListResult): string[] {
         ? commit.subject.substring(0, 57) + "..."
         : commit.subject
 
+    // TODO: Make concrete type to avoid this
+    if (commit.trackedBranches) {
+      const branchInfo = formatBranchTracking(commit.trackedBranches)
+    }
+
     return `  ${chalk.cyan(commit.gluIndex)}  ${chalk.yellow(shortSha)}  ${message}`
   })
   return fmtCommits
+}
+
+function formatBranchTracking(branches: string[]): string {
+  if (branches.length === 0) {
+    return ""
+  }
+  const branchList = branches
+    .map((b) => chalk.magenta(b))
+    .join(chalk.gray(", "))
+
+  return ` ${chalk.gray("●")} ${branchList}`
 }
