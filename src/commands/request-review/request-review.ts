@@ -40,6 +40,11 @@ export class RequestReviewCommand extends BaseCommand {
           onValidatingRange: () => {
             spinner.text = "Validating commit range..."
           },
+          onInjectingGluIds: (process, modified) => {
+            if (modified > 0) {
+              spinner.text = `Ensuring commits have glu IDs (${modified} added)...`
+            }
+          },
           onCreatingStagingBranch: () => {
             spinner.text = "Creating staging branch..."
           },

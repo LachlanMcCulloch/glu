@@ -55,7 +55,7 @@ export class GluIdService {
 
   async injectGluIds(commits: Commit[]): Promise<void> {
     const currentBranch = await this.git.getCurrentBranch()
-    const oldestCommit = commits[commits.length - 1]!
+    const oldestCommit = commits[0]!
     const baseCommit = await this.git.revparse([`${oldestCommit.hash}^`])
 
     const tmpBranch = "glu/tmp/add-glu-ids"
@@ -63,12 +63,12 @@ export class GluIdService {
     await this.git.checkout(tmpBranch)
 
     try {
-      for (let i = commits.length - 1; i >= 0; i--) {
+      for (let i = 0; i < commits.length; i++) {
         const commit = commits[i]!
 
         await this.git.cherryPick(commit.hash)
 
-        const message = (commit.subject ?? "") + "\n" + (commit.body ?? "")
+        const message = commit.body ?? ""
 
         if (!hasGluId(message)) {
           const newMessage = addGluIdToMessage(message)

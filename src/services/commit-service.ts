@@ -244,12 +244,4 @@ export class CommitService {
       })
     }
   }
-
-  // MARK: Metadata operations
-
-  // TODO: Later
-
-  // hasGluId(commit: Commit): boolean
-  // getGluId(commit: Commit): string | null
-  // withGluId(commit: Commit, gluId: string): Commit
 }
