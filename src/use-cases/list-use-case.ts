@@ -34,7 +34,7 @@ export class ListUseCase {
       behind: comparison.behind,
       currentBranch,
       originBranch: upstreamBranch,
-      unpushedCommits,
+      unpushedCommits: enrichedCommits,
     }
   }
 

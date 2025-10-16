@@ -40,11 +40,12 @@ export function formatCommits(input: ListResult): string[] {
         : commit.subject
 
     // TODO: Make concrete type to avoid this
+    let branchInfo = ""
     if (commit.trackedBranches) {
-      const branchInfo = formatBranchTracking(commit.trackedBranches)
+      branchInfo = formatBranchTracking(commit.trackedBranches)
     }
 
-    return `  ${chalk.cyan(commit.gluIndex)}  ${chalk.yellow(shortSha)}  ${message}`
+    return `  ${chalk.cyan(commit.gluIndex)}  ${chalk.yellow(shortSha)}  ${message}${branchInfo}`
   })
   return fmtCommits
 }
