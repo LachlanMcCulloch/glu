@@ -5,10 +5,10 @@ import { BranchService } from "../services/branch-service.js"
 import { CherryPickService } from "../services/cherry-pick-service.js"
 import { CommitService } from "../services/commit-service.js"
 import { loadConfig } from "../config/index.js"
-import { GluIdService } from "@/services/glu-id-service.js"
-import { GluGraphService } from "@/services/glu-graph-service.js"
-import { FileSystemGraphStorage } from "@/infrastructure/graph-storage-adapter.js"
-import { extractGluId } from "@/utils/glu-id.js"
+import { GluIdService } from "../services/glu-id-service.js"
+import { GluGraphService } from "../services/glu-graph-service.js"
+import { FileSystemGraphStorage } from "../infrastructure/graph-storage-adapter.js"
+import { extractGluId } from "../utils/glu-id.js"
 
 export interface RequestReviewOptions {
   branch?: string
