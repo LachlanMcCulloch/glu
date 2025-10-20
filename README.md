@@ -78,6 +78,64 @@ glu rr 2 --no-push
 glu rr 1 -b "my-custom-feature"
 ```
 
+## How Glu Works: Glu IDs and Branch Tracking
+
+### Glu IDs
+
+Glu automatically assigns unique IDs to your commits to track them across multiple review branches. These IDs are:
+
+- **Stable**: Once assigned, a commit's glu ID never changes
+- **Transparent**: Stored as git trailers in commit messages (no hidden metadata)
+- **Automatic**: Injected when you create your first review branch
+
+Example commit message after glu ID injection:
+
+```
+Add user authentication
+
+Implement JWT-based authentication for API endpoints
+
+Glu-ID: glu_abc123_def456
+```
+
+### Branch Tracking
+
+Glu tracks which review branches contain which commits. This allows you to:
+
+- See at a glance which commits have been sent for review
+- Track the same commit across multiple PRs
+- Avoid duplicate work
+
+When you run `glu ls`, you'll see branch tracking information:
+
+```bash
+$ glu ls
+
+feature-branch → origin/feature-branch [↑3 ↓0]
+
+  3  f8e9a2b  Fix auth bug ● review/fix-auth
+  2  d4c5b6a  Add dashboard ● review/dashboard, review/big-feature
+  1  a1b2c3d  Update README
+```
+
+The `●` indicator shows which review branches contain each commit.
+
+### Tracking Data Storage
+
+Glu stores tracking data in `.git/glu/graph.json`. This file:
+
+- ✅ **Is automatically excluded** from git (stored in `.git/`)
+- ✅ **Is local to your repository** (not shared with others)
+- ✅ **Can be safely deleted** (will be recreated if needed)
+
+```bash
+# View tracking data
+cat .git/glu/graph.json
+
+# Reset tracking data (if corrupted)
+rm -rf .git/glu/
+```
+
 ## Workflow
 
 1. Work directly off main/master branch with commits
