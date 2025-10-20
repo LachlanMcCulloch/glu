@@ -82,6 +82,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build
+        run: npm run build
+
       - name: Run e2e tests
         run: npm run test:e2e -- --run
 
