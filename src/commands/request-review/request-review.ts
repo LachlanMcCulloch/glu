@@ -1,6 +1,7 @@
 import ora from "ora"
 import { RequestReviewUseCase } from "../../use-cases/request-review-use-case.js"
 import { BaseCommand } from "../base-command.js"
+import chalk from "chalk"
 
 interface RequestReviewOptions {
   branch?: string
@@ -62,8 +63,8 @@ export class RequestReviewCommand extends BaseCommand {
 
       const successMessage =
         this.options.push === false
-          ? `${result.branch} created locally`
-          : `${result.branch} created and pushed`
+          ? `${chalk.green(`${result.branch}`)} created locally`
+          : `${chalk.green(`${result.branch}`)} created and pushed`
 
       if (spinner.isSpinning) {
         spinner.succeed(successMessage)
@@ -71,14 +72,18 @@ export class RequestReviewCommand extends BaseCommand {
         console.log(`✓ ${successMessage}`)
       }
 
-      console.log("\nCommits:")
+      console.log(`\n${chalk.cyan.bold("Commits:")}`)
       result.commits.forEach((commit) => {
         const shortMsg = commit.body.split("\n")[0]
-        console.log(`  ${commit.hash.substring(0, 7)} - ${shortMsg}`)
+        console.log(
+          `  ${chalk.yellow(`${commit.hash.substring(0, 7)}`)} - ${shortMsg}`
+        )
       })
 
       if (result.pullRequestUrl) {
-        console.log(`\n🔗 Create pull request: ${result.pullRequestUrl}`)
+        console.log(
+          `\n🔗 Create pull request: ${chalk.cyan(`${result.pullRequestUrl}`)}`
+        )
       }
     } catch (error) {
       spinner.stop()
