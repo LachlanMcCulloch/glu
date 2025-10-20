@@ -21,12 +21,18 @@ import {
   configPath,
 } from "./commands/config.js"
 
+// Handle packaging version
+import { createRequire } from "module"
+
+const require = createRequire(import.meta.url)
+const packageJson = require("../package.json")
+
 const program = new Command()
 
 program
   .name("glu")
   .description("Git stacked branch management CLI")
-  .version("1.0.0")
+  .version(packageJson.version, "-v, --version", "output the version number")
 
 // MARK: - List
 
