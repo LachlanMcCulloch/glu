@@ -86,4 +86,29 @@ describe("glu ls", () => {
     expect(lines[2]).toContain(commits[1]?.message) // older commit
     expect(lines[2]).toContain(commits[1]?.hash.substring(0, 7))
   })
+
+  test("shows branch tracking information", async () => {
+    // Setup: Create stack and review branches
+    repo = await gitFixture.createBasicStack()
+    const git = simpleGit(repo.path)
+
+    // Create review branch using glu (simulate real usage)
+    await execa("node", [gluPath, "request-review", "1", "--no-push"], {
+      cwd: repo.path,
+    })
+
+    // Run glu ls
+    const result = await execa("node", [gluPath, "ls"], {
+      cwd: repo.path,
+      reject: false,
+    })
+
+    expect(result.exitCode).toBe(0)
+
+    const lines = result.stdout.split("\n").filter(Boolean)
+    console.log(lines)
+
+    expect(lines[1]).toMatch(/2\s+[a-f0-9]{7}\s+Fix feature A/)
+    expect(lines[2]).toMatch(/1\s+[a-f0-9]{7}\s+Add feature B ● .+/)
+  })
 })

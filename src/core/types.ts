@@ -6,6 +6,7 @@ export interface Commit {
 
 export interface IndexedCommit extends Commit {
   gluIndex: number
+  trackedBranches?: string[]
 }
 
 export interface CommitWithBranches extends Commit {

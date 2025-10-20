@@ -10,6 +10,7 @@ export interface CommitData {
     name: string
     email: string
   }
+  gluId?: string
 }
 
 export interface TestScenario {
