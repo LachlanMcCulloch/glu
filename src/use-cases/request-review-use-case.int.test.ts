@@ -411,14 +411,14 @@ describe("RequestReviewUseCase integration", () => {
       expect(commit2Data?.locations[0]?.branch).toBe("review/commits-1-2")
     })
 
-    it("creates .glu/graph.json file", async () => {
+    it("creates .git/glu/graph.json file", async () => {
       // Setup: Basic stack
       repo = await fixture.createBasicStack()
       git = simpleGit(repo.path)
       const useCase = constructUseCase(git, repo.path)
 
       // Verify file doesn't exist yet
-      const graphPath = path.join(repo.path, ".glu", "graph.json")
+      const graphPath = path.join(repo.path, ".git", "glu", "graph.json")
       expect(await fs.pathExists(graphPath)).toBe(false)
 
       // Execute: Request review

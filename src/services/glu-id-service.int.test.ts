@@ -5,7 +5,8 @@ import { GitAdapter } from "@/infrastructure/git-adapter.js"
 import type { Commit } from "@/core/types.js"
 import { extractGluId } from "@/utils/glu-id.js"
 import type { TestRepo } from "tests/helpers/test-types.js"
-import { GitFixture } from "tests/helpers/git-fixture.js"
+// @ts-ignore
+import { GitFixture } from "@tests/helpers/git-fixture.js"
 import { afterEach } from "node:test"
 
 describe("GluIdService integration", () => {
@@ -27,14 +28,16 @@ describe("GluIdService integration", () => {
       const git = simpleGit(repo.path)
 
       let log = await git.log()
-      const transformed: Commit[] = log.all.map((commit) => ({
-        hash: commit.hash,
-        subject: commit.message,
-        body: commit.body,
-      }))
-
-      // Drop the oldest commit as the rebase needs something to bind onto
-      transformed.pop()
+      const transformed: Commit[] = log.all
+        .map((commit) => ({
+          hash: commit.hash,
+          subject: commit.message,
+          body: commit.body || commit.message,
+        }))
+        // Drop the oldest commit as the rebase needs something to bind onto
+        .slice(0, -1)
+        // Reverse order to match what is expected input (newest-to-oldest)
+        .toReversed()
 
       const gitAdapter = new GitAdapter(git)
       const service = new GluIdService(gitAdapter)
@@ -130,11 +133,14 @@ describe("GluIdService integration", () => {
       const git = simpleGit(repo.path)
       let log = await git.log()
 
-      const commits: Commit[] = log.all.slice(0, -1).map((c) => ({
-        hash: c.hash,
-        subject: c.message,
-        body: c.body,
-      }))
+      const commits: Commit[] = log.all
+        .slice(0, -1)
+        .map((c) => ({
+          hash: c.hash,
+          subject: c.message,
+          body: c.body || c.message,
+        }))
+        .toReversed()
 
       // Track which had IDs before
       const hadGluIdBefore = commits.map((c) => extractGluId(c.body) !== null)
@@ -173,11 +179,14 @@ describe("GluIdService integration", () => {
       const logBefore = await git.log()
       const messagesBefore = logBefore.all.slice(0, -1).map((c) => c.message)
 
-      const commits: Commit[] = logBefore.all.slice(0, -1).map((c) => ({
-        hash: c.hash,
-        subject: c.message,
-        body: c.body,
-      }))
+      const commits: Commit[] = logBefore.all
+        .slice(0, -1)
+        .map((c) => ({
+          hash: c.hash,
+          subject: c.message,
+          body: c.body || c.message,
+        }))
+        .toReversed()
 
       const gitAdapter = new GitAdapter(git)
       const service = new GluIdService(gitAdapter)
@@ -219,7 +228,7 @@ describe("GluIdService integration", () => {
         {
           hash: log.all[0]!.hash,
           subject: log.all[0]!.message,
-          body: log.all[0]!.body,
+          body: log.all[0]!.body || log.all[0]!.message,
         },
       ]
 

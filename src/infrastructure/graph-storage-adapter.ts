@@ -29,7 +29,7 @@ export class FileSystemGraphStorage implements GraphStorageAdapter {
   private readonly filePath: string
 
   constructor(baseDir: string = process.cwd()) {
-    this.gluDir = path.join(baseDir, ".glu")
+    this.gluDir = path.join(baseDir, ".git", "glu")
     this.filePath = path.join(this.gluDir, "graph.json")
   }
 

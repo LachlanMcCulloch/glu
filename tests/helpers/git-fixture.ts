@@ -37,10 +37,6 @@ export class GitFixture {
     await git.addConfig("user.name", "Test User")
     await git.addConfig("user.email", "test@example.com")
     await git.addConfig("init.defaultBranch", "main")
-
-    // Configure git to exclude .glu/ directory using info/exclude
-    const excludePath = path.join(repoPath, ".git", "info", "exclude")
-    await fs.appendFile(excludePath, "\n.glu/\n", "utf-8")
   }
 
   private async createCommit(

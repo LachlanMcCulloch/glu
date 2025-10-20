@@ -28,10 +28,10 @@ describe("FileSystemGraphStorage", () => {
       expect(graph.commits).toEqual({})
     })
 
-    it("creates .glu directory", async () => {
+    it("creates .git/glu directory", async () => {
       await storage.initialize()
 
-      const gluDir = path.join(TEST_DIR, ".glu")
+      const gluDir = path.join(TEST_DIR, ".git", "glu")
       const stats = await fs.stat(gluDir)
       expect(stats.isDirectory()).toBe(true)
     })
@@ -158,7 +158,7 @@ describe("FileSystemGraphStorage", () => {
 
   describe("error handling", () => {
     it("initializes fresh graph on corrupted data", async () => {
-      const gluDir = path.join(TEST_DIR, ".glu")
+      const gluDir = path.join(TEST_DIR, ".git", "glu")
       await fs.mkdir(gluDir, { recursive: true })
       await fs.writeFile(
         path.join(gluDir, "graph.json"),
@@ -180,7 +180,7 @@ describe("FileSystemGraphStorage", () => {
     })
 
     it("creates backup of corrupted file", async () => {
-      const gluDir = path.join(TEST_DIR, ".glu")
+      const gluDir = path.join(TEST_DIR, ".git", "glu")
       await fs.mkdir(gluDir, { recursive: true })
       const graphPath = path.join(gluDir, "graph.json")
       await fs.writeFile(graphPath, "{ invalid json", "utf-8")
