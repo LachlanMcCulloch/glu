@@ -3,6 +3,21 @@ import { type ListResult } from "../../use-cases/list-use-case.js"
 
 const arrow = chalk.gray("→")
 
+const BRANCH_COLORS = [
+  chalk.blue,
+  chalk.yellowBright,
+  chalk.magenta,
+  chalk.greenBright,
+  chalk.cyanBright,
+  chalk.red,
+  chalk.blueBright,
+  chalk.yellow,
+  chalk.magentaBright,
+  chalk.green,
+  chalk.cyan,
+  chalk.redBright,
+] as const
+
 export class ListCommitResultFormatter {
   static format(input: ListResult): string[] {
     const headline = formatHeadline(input)
@@ -16,6 +31,20 @@ export class ListCommitResultFormatter {
 }
 
 // MARK: - Helper Functions
+
+const branchColorMap = new Map<string, (typeof BRANCH_COLORS)[number]>()
+let nextColorIndex = 0
+
+function getBranchColor(branchName: string): (typeof BRANCH_COLORS)[number] {
+  if (!branchColorMap.has(branchName)) {
+    branchColorMap.set(
+      branchName,
+      BRANCH_COLORS[nextColorIndex % BRANCH_COLORS.length]!
+    )
+    nextColorIndex++
+  }
+  return branchColorMap.get(branchName)!
+}
 
 export function formatHeadline(input: ListResult): string {
   const fmtAhead =
@@ -55,7 +84,7 @@ function formatBranchTracking(branches: string[]): string {
     return ""
   }
   const branchList = branches
-    .map((b) => chalk.magenta(b))
+    .map((b) => getBranchColor(b)(b))
     .join(chalk.gray(", "))
 
   return ` ${chalk.gray("●")} ${branchList}`
