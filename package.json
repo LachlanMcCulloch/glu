@@ -26,7 +26,8 @@
     "format:check": "prettier --check .",
     "preglu": "npm run --silent build",
     "glu": "node ./dist/index.js",
-    "glu-debug": "DEBUG=simple-git node ./dist/index.js"
+    "glu-debug": "DEBUG=simple-git node ./dist/index.js",
+    "dev:test-stack": "node scripts/create-test-stack.js"
   },
   "keywords": [
     "git",
