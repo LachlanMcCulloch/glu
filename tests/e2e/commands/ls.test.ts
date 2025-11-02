@@ -111,4 +111,63 @@ describe("glu ls", () => {
     expect(lines[1]).toMatch(/2\s+[a-f0-9]{7}\s+Fix feature A/)
     expect(lines[2]).toMatch(/1\s+[a-f0-9]{7}\s+Add feature B ● .+/)
   })
+
+  test("shows commits on new branch tracking remote", async () => {
+    repo = await gitFixture.createScenario({
+      name: "Up to date stack",
+      commits: [
+        { message: "Initial commit", files: { "README.md": "# Test\n" } },
+        {
+          message: "Feature 1",
+          files: { "feature1.js": "console.log('f1');\n" },
+        },
+        {
+          message: "Feature 2",
+          files: { "feature2.js": "console.log('f2');\n" },
+        },
+      ],
+      originAt: 2, // Origin points to the last commit (Feature 2)
+      currentBranch: "main",
+    })
+
+    const initialResult = await execa("node", [gluPath, "ls"], {
+      cwd: repo.path,
+      reject: false,
+    })
+    expect(initialResult.exitCode).toBe(0)
+    expect(initialResult.stdout).toContain(
+      "No commits found ahead of origin/main"
+    )
+
+    // Create a new branch tracking the remote branch (like git checkout -b test origin/main)
+    const git = simpleGit(repo.path)
+    await git.checkoutBranch("test", "origin/main")
+
+    // Add a new commit on this new branch
+    const fs = await import("fs-extra")
+    const path = await import("path")
+    await fs.writeFile(
+      path.join(repo.path, "new-feature.js"),
+      'console.log("new feature");\n'
+    )
+    await git.add(".")
+    await git.commit("Add new feature")
+
+    // Run glu ls and verify the output
+    const result = await execa("node", [gluPath, "ls"], {
+      cwd: repo.path,
+      reject: false,
+    })
+
+    console.log(result)
+    expect(result.exitCode).toBe(0)
+
+    const lines = result.stdout.split("\n").filter(Boolean)
+
+    // Should show test branch tracking origin/main with 1 commit ahead
+    expect(lines[0]).toEqual("test → origin/main [↑1 ↓0]")
+
+    // Should show the new commit at index 1
+    expect(lines[1]).toMatch(/^\s+1\s+[a-f0-9]{7}\s+Add new feature$/)
+  })
 })

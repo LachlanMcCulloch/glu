@@ -58,7 +58,7 @@ export class CommitService {
 
   async getAheadBehindStatus(): Promise<CommitComparison> {
     const localRef = await this.git.getCurrentBranch()
-    const remoteRef = `origin/${localRef}`
+    const remoteRef = await this.git.getUpstreamBranch(localRef)
     try {
       const command = [
         "rev-list",
