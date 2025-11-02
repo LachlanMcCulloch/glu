@@ -35,10 +35,16 @@ export class GluGraphService {
     }
 
     const existingLocation = data.commits[gluId]!.locations.find(
-      (loc) => loc.branch === branch && loc.commitHash === commitHash
+      (loc) => loc.branch === branch
+    )
+    const existingLocationIndex = data.commits[gluId]!.locations.findIndex(
+      (loc) => loc.branch === branch
     )
 
-    if (!existingLocation) {
+    if (existingLocationIndex >= 0) {
+      data.commits[gluId]!.locations[existingLocationIndex]!.commitHash =
+        commitHash
+    } else {
       data.commits[gluId]!.locations.push({
         branch,
         commitHash,

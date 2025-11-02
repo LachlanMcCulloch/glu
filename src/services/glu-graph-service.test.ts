@@ -88,7 +88,7 @@ describe("GluGraphService", () => {
       await service.recordCommitLocation("glu_123", "main", "def456")
 
       const data = await storage.load()
-      expect(data.commits["glu_123"]?.locations).toHaveLength(2)
+      expect(data.commits["glu_123"]?.locations).toHaveLength(1)
     })
   })
 

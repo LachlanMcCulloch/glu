@@ -170,4 +170,60 @@ describe("glu ls", () => {
     // Should show the new commit at index 1
     expect(lines[1]).toMatch(/^\s+1\s+[a-f0-9]{7}\s+Add new feature$/)
   })
+
+  test("does not show duplicate branches when expanding review range", async () => {
+    repo = await gitFixture.createBasicStack()
+
+    // Create first review branch with commits 1-2
+    await execa("node", [gluPath, "rr", "1-2", "--no-push"], {
+      cwd: repo.path,
+    })
+
+    // Add another commit
+    const git = simpleGit(repo.path)
+    // await git.checkout("feature-branch")
+    const fs = await import("fs-extra")
+    const path = await import("path")
+    await fs.writeFile(
+      path.join(repo.path, "feature-c.js"),
+      'export const featureC = () => "C";\n'
+    )
+    await git.add(".")
+    await git.commit("Add feature C")
+
+    // Create second review branch with expanded range 1-3
+    await execa("node", [gluPath, "rr", "1-3", "--no-push"], {
+      cwd: repo.path,
+    })
+
+    // Check glu ls output
+    const result = await execa("node", [gluPath, "ls"], {
+      cwd: repo.path,
+    })
+    expect(result.exitCode).toBe(0)
+
+    const lines = result.stdout.split("\n").filter(Boolean)
+
+    // Each commit line should not have the same branch name listed multiple times
+    for (const line of lines) {
+      // Skip header
+      if (line.includes("→")) continue
+
+      if (line.includes("●")) {
+        const branchSection = line.split("●")[1]?.trim()
+        if (branchSection) {
+          const branches = branchSection
+            .split(",")
+            .map((b) => b.trim())
+            .filter(Boolean)
+
+          console.log(branches)
+          const uniqueBranches = new Set(branches)
+          expect(uniqueBranches.size).toBe(branches.length)
+        } else {
+          expect.fail(`unexpected format ${line}`)
+        }
+      }
+    }
+  })
 })
