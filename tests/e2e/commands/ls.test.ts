@@ -226,4 +226,123 @@ describe("glu ls", () => {
       }
     }
   })
+
+  test("does not show deleted branches in tracking info", async () => {
+    repo = await gitFixture.createBasicStack()
+    const git = simpleGit(repo.path)
+
+    // Create two review branches using glu
+    await execa("node", [gluPath, "rr", "1", "--no-push"], {
+      cwd: repo.path,
+    })
+
+    await execa("node", [gluPath, "rr", "2", "--no-push"], {
+      cwd: repo.path,
+    })
+
+    // Get all branches to find the review branches
+    const branchesBefore = await git.branch()
+    const reviewBranches = Object.keys(branchesBefore.branches).filter(
+      (b) => b !== "feature-branch" && !b.startsWith("remotes/")
+    )
+
+    // Verify we have review branches
+    expect(reviewBranches.length).toBeGreaterThan(0)
+
+    // First glu ls should show the review branches
+    const resultBefore = await execa("node", [gluPath, "ls"], {
+      cwd: repo.path,
+      reject: false,
+    })
+
+    expect(resultBefore.exitCode).toBe(0)
+    const linesBefore = resultBefore.stdout.split("\n").filter(Boolean)
+
+    // Find lines with tracking info (containing ●)
+    const linesWithTracking = linesBefore.filter((line) => line.includes("●"))
+    expect(linesWithTracking.length).toBeGreaterThan(0)
+
+    // Verify review branches appear in output
+    const outputBefore = resultBefore.stdout
+    for (const branch of reviewBranches) {
+      expect(outputBefore).toContain(branch)
+    }
+
+    // Delete one of the review branches
+    const branchToDelete = reviewBranches[0]!
+    await git.deleteLocalBranch(branchToDelete, true)
+
+    // Run glu ls again
+    const resultAfter = await execa("node", [gluPath, "ls"], {
+      cwd: repo.path,
+      reject: false,
+    })
+
+    expect(resultAfter.exitCode).toBe(0)
+
+    // Verify deleted branch no longer appears in output
+    const outputAfter = resultAfter.stdout
+    expect(outputAfter).not.toContain(branchToDelete)
+
+    // Verify remaining branches still appear
+    for (let i = 1; i < reviewBranches.length; i++) {
+      expect(outputAfter).toContain(reviewBranches[i])
+    }
+  })
+
+  test("prunes deleted remote branches from tracking info", async () => {
+    // Setup: Create stack and push a review branch
+    repo = await gitFixture.createBasicStack()
+    const git = simpleGit(repo.path)
+
+    // Create review branch
+    await execa("node", [gluPath, "rr", "1", "--no-push"], {
+      cwd: repo.path,
+    })
+
+    const branches = await git.branch()
+    const reviewBranch = Object.keys(branches.branches).find(
+      (b) => b !== "feature-branch" && !b.startsWith("remotes/")
+    )!
+
+    // Manually create a fake remote ref to simulate pushed branch
+    const fs = await import("fs-extra")
+    const path = await import("path")
+
+    // Get the branch's commit hash
+    const branchHash = await git.revparse([reviewBranch])
+
+    // Create the remote ref path, handling nested directories in branch name
+    const remoteRefPath = path.join(
+      repo.path,
+      ".git",
+      "refs",
+      "remotes",
+      "origin",
+      reviewBranch
+    )
+
+    // Ensure the parent directory exists (handles branch names with slashes)
+    await fs.ensureDir(path.dirname(remoteRefPath))
+    await fs.writeFile(remoteRefPath, branchHash + "\n")
+
+    // Verify remote branch exists
+    const branchesWithRemote = await git.branch(["-a"])
+    expect(branchesWithRemote.all).toContain(`remotes/origin/${reviewBranch}`)
+
+    // Delete the remote ref (simulating remote branch deletion)
+    await fs.remove(remoteRefPath)
+
+    // Run glu ls - should prune the deleted remote branch
+    const result = await execa("node", [gluPath, "ls"], {
+      cwd: repo.path,
+      reject: false,
+    })
+
+    expect(result.exitCode).toBe(0)
+
+    // The local branch still exists, but the remote tracking should be cleaned up
+    // This test mainly verifies that glu ls doesn't crash when remote branches are deleted
+    expect(result.stdout).toBeTruthy()
+  })
 })

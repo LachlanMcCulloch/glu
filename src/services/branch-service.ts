@@ -110,4 +110,8 @@ export class BranchService {
       upstream,
     }
   }
+
+  async getAllBranches(): Promise<Branch[]> {
+    return await this.git.getAllBranches()
+  }
 }

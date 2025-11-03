@@ -1,4 +1,4 @@
-import type { Commit, PushResult } from "../core/types.js"
+import type { Branch, Commit, PushResult } from "../core/types.js"
 import { simpleGit, type SimpleGit, type StatusResult } from "simple-git"
 import { extractPullRequestUrl } from "../utils/git-url-extractor.js"
 import { buildPullRequestUrl } from "../utils/pr-url-builder.js"
@@ -31,6 +31,7 @@ export interface GitOperations {
   deleteLocalBranch(branch: string, force?: boolean): Promise<void>
   getRemotes(verbose?: boolean): Promise<any[]>
   raw(command: string[]): Promise<string>
+  getAllBranches(): Promise<Branch[]>
 }
 
 export type CherryPickOptions = {
@@ -206,5 +207,28 @@ export class GitAdapter implements GitOperations {
 
   async raw(command: string[]): Promise<string> {
     return await this.git.raw(command)
+  }
+
+  async getAllBranches(): Promise<Branch[]> {
+    const result = await this.git.raw([
+      "branch",
+      "--all",
+      "--format=%(refname:short)|%(upstream:short)",
+    ])
+    return result
+      .trim()
+      .split("\n")
+      .filter((line) => line.length > 0)
+      .map((line) => {
+        const [name, upstream] = line.split("|")
+        const isRemote = name?.startsWith("remotes/") || false
+        const branchName = isRemote ? name!.replace("remotes/", "") : name!
+
+        return {
+          name: branchName,
+          isRemote,
+          upstream: upstream || null,
+        }
+      })
   }
 }

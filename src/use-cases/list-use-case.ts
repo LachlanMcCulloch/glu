@@ -4,11 +4,13 @@ import { GitAdapter } from "../infrastructure/git-adapter.js"
 import { GluGraphService } from "../services/glu-graph-service.js"
 import { FileSystemGraphStorage } from "../infrastructure/graph-storage-adapter.js"
 import { extractGluId } from "../utils/glu-id.js"
+import { BranchService } from "../services/branch-service.js"
 
 export class ListUseCase {
   constructor(
     private commitService: CommitService,
-    private gluGraphService: GluGraphService
+    private gluGraphService: GluGraphService,
+    private branchService: BranchService
   ) {}
 
   static default(): ListUseCase {
@@ -16,10 +18,16 @@ export class ListUseCase {
     const graphStorage = new FileSystemGraphStorage()
     const commitService = new CommitService(git)
     const gluGraphService = new GluGraphService(graphStorage)
-    return new ListUseCase(commitService, gluGraphService)
+    const branchService = new BranchService(git)
+    return new ListUseCase(commitService, gluGraphService, branchService)
   }
 
   async execute(): Promise<ListResult> {
+    // Prune deleted branches before listing
+    const allBranches = await this.branchService.getAllBranches()
+    const branchNames = allBranches.map((b) => b.name)
+    await this.gluGraphService.pruneDeletedBranches(branchNames)
+
     const currentBranch = await this.commitService.getCurrentBranch()
     const upstreamBranch =
       await this.commitService.getUpstreamBranch(currentBranch)
